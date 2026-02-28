@@ -17,34 +17,42 @@
             position: fixed;
             bottom: 28px;
             right: 28px;
-            width: 60px;
-            height: 60px;
+            width: 68px;
+            height: 68px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #0071e3 0%, #0055b3 100%);
+            background: linear-gradient(135deg, #0071e3 0%, #0050c8 100%);
             color: white;
-            border: none;
+            border: 3px solid rgba(255,255,255,0.3);
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0, 113, 227, 0.4);
+            box-shadow: 0 4px 24px rgba(0, 113, 227, 0.5), 0 0 0 0 rgba(0, 113, 227, 0.4);
             z-index: 99999;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
             font-size: 24px;
+            animation: jeon-glow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes jeon-glow {
+            0%, 100% { box-shadow: 0 4px 24px rgba(0, 113, 227, 0.5), 0 0 0 0 rgba(0, 113, 227, 0.3); }
+            50% { box-shadow: 0 6px 32px rgba(0, 113, 227, 0.6), 0 0 0 10px rgba(0, 113, 227, 0); }
         }
 
         #jeon-ai-toggle:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 28px rgba(0, 113, 227, 0.5);
+            transform: scale(1.12);
+            box-shadow: 0 8px 36px rgba(0, 113, 227, 0.6);
+            animation: none;
         }
 
         #jeon-ai-toggle.active {
             transform: scale(0.9) rotate(90deg);
+            animation: none;
         }
 
         #jeon-ai-toggle svg {
-            width: 28px;
-            height: 28px;
+            width: 30px;
+            height: 30px;
             transition: transform 0.3s;
         }
 
@@ -52,28 +60,72 @@
         #jeon-ai-toggle.active .chat-icon { display: none; }
         #jeon-ai-toggle.active .close-icon { display: block; }
 
+        /* ── 말풍선 툴팁 ── */
+        #jeon-ai-tooltip {
+            position: fixed;
+            bottom: 42px;
+            right: 108px;
+            background: white;
+            color: #1d1d1f;
+            padding: 10px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
+            font-size: 13.5px;
+            font-weight: 500;
+            font-family: Inter, -apple-system, 'SF Pro Display', sans-serif;
+            white-space: nowrap;
+            z-index: 99999;
+            animation: jeon-tooltip-in 0.5s ease 1.5s both, jeon-tooltip-bounce 3s ease-in-out 2s infinite;
+            cursor: pointer;
+        }
+
+        #jeon-ai-tooltip::after {
+            content: '';
+            position: absolute;
+            right: -7px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 7px solid transparent;
+            border-left-color: white;
+            border-right: none;
+        }
+
+        @keyframes jeon-tooltip-in {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes jeon-tooltip-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        #jeon-ai-tooltip.hidden {
+            display: none !important;
+        }
+
         /* ── 뱃지 (알림) ── */
         #jeon-ai-badge {
             position: absolute;
-            top: -2px;
-            right: -2px;
-            width: 18px;
-            height: 18px;
+            top: -4px;
+            right: -4px;
+            width: 22px;
+            height: 22px;
             background: #E91E63;
             border-radius: 50%;
-            border: 2px solid white;
+            border: 2.5px solid white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             color: white;
-            animation: jeon-pulse 2s infinite;
+            animation: jeon-pulse 1.5s infinite;
         }
 
         @keyframes jeon-pulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
+            50% { transform: scale(1.2); }
         }
 
         /* ── 챗봇 창 ── */
@@ -406,9 +458,21 @@
             #jeon-ai-toggle {
                 bottom: 20px;
                 right: 20px;
+                width: 62px;
+                height: 62px;
+            }
+            #jeon-ai-tooltip {
+                bottom: 34px;
+                right: 94px;
+                font-size: 12.5px;
+                padding: 8px 14px;
             }
             #jeon-ai-chat.open ~ #jeon-ai-toggle,
             #jeon-ai-toggle.active {
+                display: none !important;
+            }
+            #jeon-ai-tooltip.hidden,
+            #jeon-ai-chat.open ~ #jeon-ai-tooltip {
                 display: none !important;
             }
         }
@@ -421,6 +485,9 @@
     const widget = document.createElement('div');
     widget.id = 'jeon-ai-widget';
     widget.innerHTML = `
+        <!-- 말풍선 툴팁 -->
+        <div id="jeon-ai-tooltip">운동·건강 궁금증을 물어보세요!</div>
+
         <!-- 토글 버튼 -->
         <button id="jeon-ai-toggle" aria-label="AI 상담 열기">
             <svg class="chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -521,12 +588,14 @@
     let isOpen = false;
 
     const closeBtn = document.getElementById('jeon-ai-close');
+    const tooltip = document.getElementById('jeon-ai-tooltip');
 
     function openChat() {
         isOpen = true;
         chat.classList.add('open');
         toggle.classList.add('active');
         badge.style.display = 'none';
+        tooltip.classList.add('hidden');
         input.focus();
     }
 
@@ -542,6 +611,8 @@
     });
 
     closeBtn.addEventListener('click', closeChat);
+
+    tooltip.addEventListener('click', openChat);
 
     // API 서버 주소 (로컬 개발 시 localhost, 배포 시 변경)
     const API_URL = window.JEON_AI_API_URL || '/api/chat';
