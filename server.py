@@ -159,7 +159,9 @@ def chat():
         return result, 200, {"Content-Type": "application/json"}
 
     except Exception as e:
-        return json.dumps({"error": str(e)}), 500, {"Content-Type": "application/json"}
+        import traceback
+        err_detail = traceback.format_exc()
+        return json.dumps({"error": str(e), "detail": err_detail}), 500, {"Content-Type": "application/json"}
 
 
 @app.route("/api/health")
