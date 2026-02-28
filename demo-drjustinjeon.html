@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>drjustinjeon.com — AI 챗봇 미리보기</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --accent: #0071e3;
+            --bg-primary: #fbfbfd;
+            --bg-secondary: #f5f5f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Inter, -apple-system, 'SF Pro Display', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        /* 실제 drjustinjeon.com 스타일 모사 */
+        .mock-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: rgba(251, 251, 253, 0.85);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 9999;
+        }
+
+        .mock-nav .logo {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text-primary);
+        }
+
+        .mock-nav .menu {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .mock-nav .menu li {
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .mock-nav .menu li:hover { color: var(--accent); }
+
+        .mock-hero {
+            padding: 140px 40px 80px;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .mock-hero .photo {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8e8ed, #d1d1d6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .mock-hero h1 {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .mock-hero h2 {
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .mock-hero p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 500px;
+        }
+
+        .mock-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .mock-section h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            letter-spacing: -0.5px;
+        }
+
+        .mock-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .mock-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid #e8e8ed;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .mock-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .mock-card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .mock-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .mock-banner {
+            background: linear-gradient(135deg, #0071e3, #0055b3);
+            color: white;
+            text-align: center;
+            padding: 48px 40px;
+            margin: 40px 0;
+        }
+
+        .mock-banner h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .mock-banner p {
+            opacity: 0.85;
+            font-size: 14px;
+        }
+
+        .mock-footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            border-top: 1px solid #e8e8ed;
+        }
+
+        /* 설명 배너 */
+        .demo-notice {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            background: #fff3cd;
+            color: #856404;
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            z-index: 9998;
+            border-bottom: 1px solid #ffc107;
+        }
+
+        .demo-notice strong { color: #664d03; }
+
+        @media (max-width: 600px) {
+            .mock-hero { flex-direction: column; text-align: center; padding: 120px 20px 40px; gap: 24px; }
+            .mock-hero h1 { font-size: 28px; }
+            .mock-grid { grid-template-columns: 1fr; }
+            .mock-nav .menu { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-notice">
+        <strong>미리보기 모드</strong> — 이 페이지는 drjustinjeon.com에 AI 챗봇이 적용된 모습을 시뮬레이션합니다. 우측 하단 💬 버튼을 클릭해보세요.
+    </div>
+
+    <nav class="mock-nav">
+        <div class="logo">Justin Y. Jeon, PhD</div>
+        <ul class="menu">
+            <li>About</li>
+            <li>Research</li>
+            <li>Education</li>
+            <li>Publications</li>
+            <li>Network</li>
+            <li>Media</li>
+            <li>Contact</li>
+        </ul>
+    </nav>
+
+    <section class="mock-hero">
+        <div class="photo">JY</div>
+        <div>
+            <h1>Justin Y. Jeon</h1>
+            <h2>Professor, Yonsei University</h2>
+            <p>Exercise Medicine & Salutogenesis researcher with 300+ publications in Nature Medicine, JAMA Surgery, and more. Director of ICONS (Integrative Center for Optimal Nourishment & Salutogenesis).</p>
+        </div>
+    </section>
+
+    <section class="mock-section">
+        <h2>Research Focus</h2>
+        <div class="mock-grid">
+            <div class="mock-card">
+                <h3>Exercise Oncology</h3>
+                <p>Exercise interventions for cancer prevention, treatment, and survivorship across multiple cancer types.</p>
+            </div>
+            <div class="mock-card">
+                <h3>Salutogenesis</h3>
+                <p>Understanding health generation through the Ease-Disease continuum and E-factor framework.</p>
+            </div>
+            <div class="mock-card">
+                <h3>Brain Insulin Resistance</h3>
+                <p>Investigating the P-factor and mitochondrial dysfunction in neurodegenerative diseases.</p>
+            </div>
+            <div class="mock-card">
+                <h3>Digital Therapeutics</h3>
+                <p>ExerCompass — a digital therapeutic app for colorectal cancer rehabilitation.</p>
+            </div>
+            <div class="mock-card">
+                <h3>Sarcopenia & Aging</h3>
+                <p>Muscle as medicine: the role of skeletal muscle in chronic disease prevention.</p>
+            </div>
+            <div class="mock-card">
+                <h3>Oxytocin & Health</h3>
+                <p>Social relationships, oxytocin, and their impact on cancer, dementia, and overall well-being.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="mock-banner">
+        <h2>Exercise is Medicine</h2>
+        <p>"The E-factor positions exercise as a biological catalyst for whole-person healing."</p>
+    </div>
+
+    <section class="mock-section">
+        <h2>Selected Publications</h2>
+        <div class="mock-grid">
+            <div class="mock-card">
+                <h3>Nature Medicine (2024)</h3>
+                <p>Metabolic pathways of exercise-induced cancer prevention.</p>
+            </div>
+            <div class="mock-card">
+                <h3>JAMA Surgery (2023)</h3>
+                <p>Prehabilitation in colorectal cancer surgery outcomes.</p>
+            </div>
+            <div class="mock-card">
+                <h3>Annals of Oncology (2022)</h3>
+                <p>Exercise and bowel function in LARS syndrome.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="mock-footer">
+        &copy; 2026 Justin Y. Jeon. All rights reserved. | Yonsei University
+    </footer>
+
+    <!-- ★ 이 한 줄만 추가하면 챗봇이 작동합니다 ★ -->
+    <script src="jeon-ai-widget.js"></script>
+</body>
+</html>
