@@ -446,6 +446,78 @@
             border-radius: 0 0 20px 20px;
         }
 
+        /* ── Voice Input (Mic) Button ── */
+        #jeon-ai-mic {
+            width: 38px;
+            height: 38px;
+            background: #f5f5f7;
+            color: #6e6e73;
+            border: 1.5px solid #e8e8ed;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, background 0.2s, color 0.2s;
+            flex-shrink: 0;
+        }
+
+        #jeon-ai-mic:hover {
+            background: #e8e8ed;
+            color: #1d1d1f;
+            transform: scale(1.05);
+        }
+
+        #jeon-ai-mic.listening {
+            background: #ff3b30;
+            color: white;
+            border-color: #ff3b30;
+            animation: jeon-mic-pulse 1.2s ease-in-out infinite;
+        }
+
+        #jeon-ai-mic svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        @keyframes jeon-mic-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); }
+        }
+
+        /* ── TTS Speaker Button ── */
+        .jeon-tts-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: #f0f0f5;
+            border: 1px solid #e0e0e5;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s, color 0.2s;
+            color: #6e6e73;
+            flex-shrink: 0;
+        }
+
+        .jeon-tts-btn:hover {
+            background: #e0e0e5;
+            color: #1d1d1f;
+        }
+
+        .jeon-tts-btn.speaking {
+            background: #0071e3;
+            border-color: #0071e3;
+            color: white;
+        }
+
+        .jeon-tts-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
         /* ── Mobile Responsive ── */
         @media (max-width: 480px) {
             #jeon-ai-chat {
@@ -474,6 +546,10 @@
             #jeon-ai-tooltip.hidden,
             #jeon-ai-chat.open ~ #jeon-ai-tooltip {
                 display: none !important;
+            }
+            #jeon-ai-mic {
+                width: 34px;
+                height: 34px;
             }
         }
     `;
@@ -533,6 +609,14 @@
 
             <div id="jeon-ai-input-area">
                 <textarea id="jeon-ai-input" placeholder="Ask about exercise and health..." rows="1"></textarea>
+                <button id="jeon-ai-mic" aria-label="Voice input" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="1" width="6" height="11" rx="3"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="23"/>
+                        <line x1="8" y1="23" x2="16" y2="23"/>
+                    </svg>
+                </button>
                 <button id="jeon-ai-send">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
@@ -637,6 +721,18 @@
         isOpen = false;
         chat.classList.remove('open');
         toggle.classList.remove('active');
+        // Stop TTS
+        if (synth && synth.speaking) {
+            synth.cancel();
+            if (currentTtsBtn) {
+                currentTtsBtn.classList.remove('speaking');
+                currentTtsBtn = null;
+            }
+        }
+        // Stop STT
+        if (recognition && isListening) {
+            recognition.stop();
+        }
     }
 
     toggle.addEventListener('click', () => {
@@ -652,6 +748,64 @@
     const API_URL = window.JEON_AI_API_URL || '/api/chat';
     const sessionId = 'sess_en_' + Math.random().toString(36).slice(2, 10);
 
+    // ═══════════════════════════════════════════
+    // Voice Configuration
+    // ═══════════════════════════════════════════
+    const VOICE_LANG = 'en-US';
+    const VOICE_LABELS = {
+        micStart: 'Start voice input',
+        micStop: 'Stop voice input',
+        ttsPlay: 'Read aloud',
+        ttsStop: 'Stop reading',
+        micDenied: 'Microphone access was denied. Please allow microphone permission in your browser settings.'
+    };
+
+    // TTS helpers
+    const synth = window.speechSynthesis;
+
+    function stripHtmlForTts(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    let currentTtsBtn = null;
+    function speakText(text, btn) {
+        if (!synth) return;
+        if (synth.speaking && currentTtsBtn === btn) {
+            synth.cancel();
+            btn.classList.remove('speaking');
+            currentTtsBtn = null;
+            return;
+        }
+        if (synth.speaking) {
+            synth.cancel();
+            if (currentTtsBtn) currentTtsBtn.classList.remove('speaking');
+        }
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = VOICE_LANG;
+        utter.rate = 1;
+        btn.classList.add('speaking');
+        currentTtsBtn = btn;
+        utter.onend = () => {
+            btn.classList.remove('speaking');
+            currentTtsBtn = null;
+        };
+        utter.onerror = () => {
+            btn.classList.remove('speaking');
+            currentTtsBtn = null;
+        };
+        synth.speak(utter);
+    }
+
+    function createTtsButton() {
+        const btn = document.createElement('button');
+        btn.className = 'jeon-tts-btn';
+        btn.setAttribute('aria-label', VOICE_LABELS.ttsPlay);
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>';
+        return btn;
+    }
+
     function addMsg(text, isUser, isHtml) {
         const welcome = document.getElementById('jeon-ai-welcome');
         if (welcome) welcome.style.display = 'none';
@@ -661,6 +815,15 @@
         if (!isUser) {
             const content = isHtml ? text : formatText(text);
             div.innerHTML = `<div class="jeon-sender">Dr. Jeon AI</div>${content}`;
+            // TTS button
+            if (synth) {
+                const ttsBtn = createTtsButton();
+                ttsBtn.addEventListener('click', () => {
+                    const msgText = stripHtmlForTts(div.innerHTML);
+                    speakText(msgText, ttsBtn);
+                });
+                div.appendChild(ttsBtn);
+            }
         } else {
             div.textContent = text;
         }
@@ -755,6 +918,64 @@
         input.style.height = 'auto';
         input.style.height = Math.min(input.scrollHeight, 80) + 'px';
     });
+
+    // ═══════════════════════════════════════════
+    // Voice Input (STT)
+    // ═══════════════════════════════════════════
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+    const micBtn = document.getElementById('jeon-ai-mic');
+
+    if (SpeechRecognition && micBtn) {
+        micBtn.style.display = 'flex';
+        recognition = new SpeechRecognition();
+        recognition.lang = VOICE_LANG;
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        recognition.onstart = () => {
+            isListening = true;
+            micBtn.classList.add('listening');
+            micBtn.setAttribute('aria-label', VOICE_LABELS.micStop);
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            micBtn.classList.remove('listening');
+            micBtn.setAttribute('aria-label', VOICE_LABELS.micStart);
+        };
+
+        recognition.onresult = (e) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+                const t = e.results[i][0].transcript;
+                if (e.results[i].isFinal) {
+                    finalTranscript += t;
+                } else {
+                    interimTranscript += t;
+                }
+            }
+            input.value = finalTranscript || interimTranscript;
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+        };
+
+        recognition.onerror = (e) => {
+            if (e.error === 'not-allowed') {
+                alert(VOICE_LABELS.micDenied);
+            }
+        };
+
+        micBtn.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+    }
 
     // External API
     window.jeonAI = {
