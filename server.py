@@ -2,12 +2,16 @@
 """
 전용관 AI — Flask API 서버
 Claude API를 연결하여 실시간 AI 답변을 제공합니다.
+RAG (검색 증강 생성) 기능으로 YouTube/도서 지식을 활용합니다.
 
 실행: python server.py
 접속: http://localhost:5000
 """
 import os
 import json
+import math
+import re
+from collections import Counter
 import requests as http_requests
 from flask import Flask, request, Response, send_from_directory, stream_with_context
 from flask_cors import CORS
@@ -25,6 +29,79 @@ MAX_TOKENS = 1024
 
 app = Flask(__name__, static_folder=".", static_url_path="")
 CORS(app, origins=["https://drjustinjeon.com", "https://www.drjustinjeon.com", "http://localhost:5000"])
+
+# ═══════════════════════════════════════════
+# RAG 지식베이스 로드 및 검색 엔진
+# ═══════════════════════════════════════════
+def load_knowledge_base():
+    """knowledge_base.json에서 청크 로드"""
+    kb_path = os.path.join(os.path.dirname(__file__), "knowledge_base.json")
+    if not os.path.exists(kb_path):
+        print("[RAG] knowledge_base.json 파일이 없습니다. RAG 비활성화.")
+        return []
+    with open(kb_path, "r", encoding="utf-8") as f:
+        chunks = json.load(f)
+    print(f"[RAG] 지식베이스 로드 완료: {len(chunks)}개 청크")
+    return chunks
+
+def tokenize_korean(text):
+    """한국어 텍스트를 단어 단위로 분할 (공백 + 2글자 이상)"""
+    words = re.findall(r'[가-힣a-zA-Z0-9]{2,}', text.lower())
+    return words
+
+def build_idf(chunks):
+    """IDF (Inverse Document Frequency) 계산"""
+    doc_count = len(chunks)
+    df = Counter()
+    for chunk in chunks:
+        words = set(tokenize_korean(chunk["text"]))
+        for word in words:
+            df[word] += 1
+    idf = {}
+    for word, freq in df.items():
+        idf[word] = math.log((doc_count + 1) / (freq + 1)) + 1
+    return idf
+
+def search_chunks(query, chunks, idf, top_k=5):
+    """BM25 스타일 검색으로 관련 청크 찾기"""
+    query_words = tokenize_korean(query)
+    if not query_words:
+        return []
+
+    scores = []
+    for chunk in chunks:
+        chunk_words = tokenize_korean(chunk["text"])
+        if not chunk_words:
+            scores.append(0)
+            continue
+
+        word_freq = Counter(chunk_words)
+        doc_len = len(chunk_words)
+        score = 0
+        k1 = 1.5
+        b = 0.75
+        avg_dl = 450  # 평균 청크 길이 (대략)
+
+        for qw in query_words:
+            if qw in word_freq:
+                tf = word_freq[qw]
+                idf_val = idf.get(qw, 1.0)
+                tf_norm = (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_dl))
+                score += idf_val * tf_norm
+
+        scores.append(score)
+
+    # 상위 top_k 인덱스
+    ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+    results = []
+    for i in ranked[:top_k]:
+        if scores[i] > 0:
+            results.append(chunks[i])
+    return results
+
+# 서버 시작 시 지식베이스 로드
+KNOWLEDGE_BASE = load_knowledge_base()
+IDF_INDEX = build_idf(KNOWLEDGE_BASE) if KNOWLEDGE_BASE else {}
 
 # ═══════════════════════════════════════════
 # System Prompt (전용관 AI v1.1)
@@ -138,6 +215,18 @@ def chat():
     history = conversations[session_id][-10:]
 
     try:
+        # RAG: 사용자 질문으로 관련 지식 검색
+        rag_context = ""
+        if KNOWLEDGE_BASE:
+            relevant_chunks = search_chunks(user_message, KNOWLEDGE_BASE, IDF_INDEX, top_k=5)
+            if relevant_chunks:
+                rag_context = "\n\n## 참고 자료 (전용관 교수의 YouTube 강의 및 저서에서 발췌)\n"
+                for i, chunk in enumerate(relevant_chunks, 1):
+                    rag_context += f"\n### 참고 {i} ({chunk['source']})\n{chunk['text']}\n"
+                rag_context += "\n위 참고 자료를 활용하되, 자연스럽게 답변에 녹여서 전달하세요. 출처를 직접 언급하지 않아도 됩니다.\n"
+
+        system_with_rag = SYSTEM_PROMPT + rag_context
+
         api_response = http_requests.post(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -148,7 +237,7 @@ def chat():
             json={
                 "model": MODEL,
                 "max_tokens": MAX_TOKENS,
-                "system": SYSTEM_PROMPT,
+                "system": system_with_rag,
                 "messages": history
             },
             timeout=60
@@ -178,7 +267,7 @@ def chat():
 
 @app.route("/api/health")
 def health():
-    return {"status": "ok", "api_key_set": bool(API_KEY)}
+    return {"status": "ok", "api_key_set": bool(API_KEY), "rag_chunks": len(KNOWLEDGE_BASE)}
 
 
 @app.route("/jeon-ai-widget.js")
