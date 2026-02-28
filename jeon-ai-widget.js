@@ -112,6 +112,34 @@
             align-items: center;
             gap: 14px;
             flex-shrink: 0;
+            position: relative;
+        }
+
+        #jeon-ai-close {
+            position: absolute;
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        #jeon-ai-close:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        #jeon-ai-close svg {
+            width: 16px;
+            height: 16px;
         }
 
         #jeon-ai-avatar {
@@ -379,6 +407,10 @@
                 bottom: 20px;
                 right: 20px;
             }
+            #jeon-ai-chat.open ~ #jeon-ai-toggle,
+            #jeon-ai-toggle.active {
+                display: none !important;
+            }
         }
     `;
     document.head.appendChild(style);
@@ -409,6 +441,12 @@
                     <h3>전용관 AI</h3>
                     <p>Evidence-based Exercise & Health Advisor</p>
                 </div>
+                <button id="jeon-ai-close" aria-label="닫기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
             </div>
 
             <div id="jeon-ai-messages">
@@ -482,15 +520,28 @@
     const badge = document.getElementById('jeon-ai-badge');
     let isOpen = false;
 
+    const closeBtn = document.getElementById('jeon-ai-close');
+
+    function openChat() {
+        isOpen = true;
+        chat.classList.add('open');
+        toggle.classList.add('active');
+        badge.style.display = 'none';
+        input.focus();
+    }
+
+    function closeChat() {
+        isOpen = false;
+        chat.classList.remove('open');
+        toggle.classList.remove('active');
+    }
+
     toggle.addEventListener('click', () => {
-        isOpen = !isOpen;
-        chat.classList.toggle('open', isOpen);
-        toggle.classList.toggle('active', isOpen);
-        if (isOpen) {
-            badge.style.display = 'none';
-            input.focus();
-        }
+        if (isOpen) closeChat();
+        else openChat();
     });
+
+    closeBtn.addEventListener('click', closeChat);
 
     // API 서버 주소 (로컬 개발 시 localhost, 배포 시 변경)
     const API_URL = window.JEON_AI_API_URL || '/api/chat';
@@ -606,12 +657,7 @@
     // 외부 API
     window.jeonAI = {
         ask: function(text) {
-            if (!isOpen) {
-                isOpen = true;
-                chat.classList.add('open');
-                toggle.classList.add('active');
-                badge.style.display = 'none';
-            }
+            if (!isOpen) openChat();
             setTimeout(() => send(text), 300);
         }
     };
