@@ -247,7 +247,10 @@ You deliver broad, balanced scientific evidence in exercise medicine and health 
 ## Related Content
 - YouTube: "Power of Failure" channel
 - Book: "The Oxytocin Story"
-- Website: drjustinjeon.com"""
+- Website: drjustinjeon.com
+
+## CRITICAL LANGUAGE RULE
+You MUST always respond in English. Even if reference materials are in Korean, translate and present all information in English. Never respond in Korean."""
 
 # 대화 히스토리 (세션별 - 간단한 메모리 구현)
 conversations = {}
