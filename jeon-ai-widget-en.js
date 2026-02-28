@@ -527,10 +527,7 @@
                         <span class="jeon-tag">Oxytocin</span>
                         <span class="jeon-tag">E-factor</span>
                     </div>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">I'm undergoing chemo. Is it safe to exercise?</button>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">What exercises help prevent dementia?</button>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">I was diagnosed with diabetes. Can exercise help?</button>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">My child has ADHD. Can exercise make a difference?</button>
+                    <div id="jeon-ai-examples"></div>
                 </div>
             </div>
 
@@ -575,6 +572,43 @@
         }
         return `Great question. Let me answer from the perspective of evidence-based exercise medicine and salutogenesis.\n\nHealth is not simply the absence of disease. According to the WHO, we all exist on a continuum between Ease and Dis-ease. Through <strong>exercise, nutrition, sleep, and social connection</strong>, we can move toward Ease.\n\nTo give you a more specific answer, please let me know which topic interests you:\n\n• Cancer & Exercise (ACSM guidelines)\n• Diabetes & Lifestyle (DPP, DiRECT studies)\n• Dementia Prevention (Lancet Commission)\n• Muscle & Aging (Sarcopenia)\n• Sleep Health\n• Oxytocin & Relationships\n• Children & Youth (ADHD, ASD)`;
     }
+
+    // ═══════════════════════════════════════════
+    // Sample Question Pool (random 5 shown)
+    // ═══════════════════════════════════════════
+    const allQuestions = [
+        "I'm undergoing chemo. Is it safe to exercise?",
+        "What exercises help prevent dementia?",
+        "I was diagnosed with diabetes. Can exercise help?",
+        "My child has ADHD. Can exercise make a difference?",
+        "I have trouble sleeping. Does exercise help with insomnia?",
+        "How does oxytocin affect our health?",
+        "Why do we lose muscle as we age? How can I prevent it?",
+        "What is salutogenesis?",
+        "For weight loss, is exercise or diet more important?",
+        "Can exercise work as an antidepressant?",
+        "What's the link between dopamine and exercise?",
+        "What is insulin resistance? Can exercise reverse it?",
+        "What exercises are best for heart health?",
+        "Is intermittent fasting good for health?",
+        "How does chronic stress affect the body?",
+        "What is the glymphatic system in the brain?",
+        "Why are mitochondria so important for health?",
+        "What are the P-factor and E-factor?",
+        "Is exercising with others really better than alone?",
+        "What's the connection between sleep and Alzheimer's?",
+    ];
+
+    function renderQuestions() {
+        const container = document.getElementById('jeon-ai-examples');
+        if (!container) return;
+        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, 5);
+        container.innerHTML = selected.map(q =>
+            `<button class="jeon-example" onclick="jeonAI.ask(this.textContent)">${q}</button>`
+        ).join('');
+    }
+    renderQuestions();
 
     // ═══════════════════════════════════════════
     // Interaction Logic

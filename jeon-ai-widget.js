@@ -527,10 +527,7 @@
                         <span class="jeon-tag">옥시토신</span>
                         <span class="jeon-tag">E-factor</span>
                     </div>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">항암치료 중인데, 운동해도 괜찮을까요?</button>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">치매 예방을 위해 어떤 운동을 해야 하나요?</button>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">당뇨병 진단을 받았는데, 운동으로 나을 수 있나요?</button>
-                    <button class="jeon-example" onclick="jeonAI.ask(this.textContent)">아이가 ADHD인데, 운동이 도움이 될까요?</button>
+                    <div id="jeon-ai-examples"></div>
                 </div>
             </div>
 
@@ -575,6 +572,43 @@
         }
         return `좋은 질문입니다. 근거 기반 운동의학과 살루토제네시스 관점에서 답변드리겠습니다.\n\n건강은 단순히 질병이 없는 상태가 아닙니다. WHO 정의에 따르면, 우리 모두는 Ease와 Dis-ease의 연속선 위에 있습니다. <strong>운동, 영양, 수면, 사회적 관계</strong>를 통해 Ease 쪽으로 이동할 수 있습니다.\n\n더 구체적으로 답변드리기 위해, 어떤 주제에 관심이 있으신지 알려주세요:\n\n• 암과 운동 (ACSM 가이드라인)\n• 당뇨병과 생활습관 (DPP, DiRECT 연구)\n• 치매 예방 (Lancet Commission)\n• 근력과 노화 (근감소증)\n• 수면 건강\n• 옥시토신과 관계\n• 아동·청소년 (ADHD, ASD)`;
     }
+
+    // ═══════════════════════════════════════════
+    // 샘플 질문 풀 (랜덤 5개 표시)
+    // ═══════════════════════════════════════════
+    const allQuestions = [
+        "항암치료 중인데, 운동해도 괜찮을까요?",
+        "치매 예방을 위해 어떤 운동을 해야 하나요?",
+        "당뇨병 진단을 받았는데, 운동으로 나을 수 있나요?",
+        "아이가 ADHD인데, 운동이 도움이 될까요?",
+        "잠을 잘 못 자는데, 운동이 수면에 도움이 되나요?",
+        "옥시토신이 건강에 어떤 영향을 미치나요?",
+        "나이 들면 근육이 왜 줄어드나요? 어떻게 막나요?",
+        "살루토제네시스가 뭔가요?",
+        "다이어트할 때 운동과 식이 중 뭐가 더 중요한가요?",
+        "우울할 때 운동이 약이 될 수 있나요?",
+        "도파민과 운동은 어떤 관계가 있나요?",
+        "인슐린 저항성이 뭔가요? 운동으로 개선되나요?",
+        "심혈관 건강을 지키려면 어떤 운동이 좋을까요?",
+        "간헐적 단식이 건강에 도움이 되나요?",
+        "스트레스가 몸에 미치는 영향이 궁금해요",
+        "뇌섬엽(Insula)이 수면에 어떤 영향을 주나요?",
+        "글림파틱 시스템이 뭔가요?",
+        "미토콘드리아가 건강에 왜 중요한가요?",
+        "P-factor와 E-factor가 뭔가요?",
+        "혼자보다 같이 운동하면 정말 더 좋은가요?",
+    ];
+
+    function renderQuestions() {
+        const container = document.getElementById('jeon-ai-examples');
+        if (!container) return;
+        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, 5);
+        container.innerHTML = selected.map(q =>
+            `<button class="jeon-example" onclick="jeonAI.ask(this.textContent)">${q}</button>`
+        ).join('');
+    }
+    renderQuestions();
 
     // ═══════════════════════════════════════════
     // 인터랙션 로직
