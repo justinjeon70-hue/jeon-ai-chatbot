@@ -136,25 +136,26 @@ def chat():
     try:
         client = Anthropic(api_key=API_KEY)
 
+        # 스트리밍 대신 일반 응답으로 변경 (배포 안정성)
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            system=SYSTEM_PROMPT,
+            messages=history
+        )
+
+        assistant_text = response.content[0].text
+
+        # 응답을 히스토리에 추가
+        conversations[session_id].append({
+            "role": "assistant",
+            "content": assistant_text
+        })
+
         def generate():
-            with client.messages.stream(
-                model=MODEL,
-                max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT,
-                messages=history
-            ) as stream:
-                full_response = ""
-                for text in stream.text_stream:
-                    full_response += text
-                    yield f"data: {json.dumps({'text': text})}\n\n"
-
-                # 응답을 히스토리에 추가
-                conversations[session_id].append({
-                    "role": "assistant",
-                    "content": full_response
-                })
-
-                yield f"data: {json.dumps({'done': True})}\n\n"
+            # 한 번에 전체 텍스트를 SSE로 전송
+            yield f"data: {json.dumps({'text': assistant_text})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
 
         return Response(
             stream_with_context(generate()),
