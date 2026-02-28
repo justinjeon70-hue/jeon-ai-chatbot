@@ -112,14 +112,18 @@ def index():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     if not API_KEY:
-        return {"error": "API key not configured. Set ANTHROPIC_API_KEY environment variable."}, 500
+        return json.dumps({"error": "API key not configured"}), 500, {"Content-Type": "application/json"}
 
-    data = request.json
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return json.dumps({"error": f"Invalid JSON: {str(e)}"}), 400, {"Content-Type": "application/json"}
+
     user_message = data.get("message", "").strip()
     session_id = data.get("session_id", "default")
 
     if not user_message:
-        return {"error": "Empty message"}, 400
+        return json.dumps({"error": "Empty message"}), 400, {"Content-Type": "application/json"}
 
     # 대화 히스토리 관리
     if session_id not in conversations:
@@ -136,7 +140,6 @@ def chat():
     try:
         client = Anthropic(api_key=API_KEY)
 
-        # 스트리밍 대신 일반 응답으로 변경 (배포 안정성)
         response = client.messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
@@ -152,22 +155,11 @@ def chat():
             "content": assistant_text
         })
 
-        def generate():
-            # 한 번에 전체 텍스트를 SSE로 전송
-            yield f"data: {json.dumps({'text': assistant_text})}\n\n"
-            yield f"data: {json.dumps({'done': True})}\n\n"
-
-        return Response(
-            stream_with_context(generate()),
-            content_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "X-Accel-Buffering": "no"
-            }
-        )
+        result = json.dumps({"text": assistant_text, "done": True}, ensure_ascii=False)
+        return result, 200, {"Content-Type": "application/json"}
 
     except Exception as e:
-        return {"error": str(e)}, 500
+        return json.dumps({"error": str(e)}), 500, {"Content-Type": "application/json"}
 
 
 @app.route("/api/health")

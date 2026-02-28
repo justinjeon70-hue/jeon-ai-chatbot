@@ -496,14 +496,15 @@
     const API_URL = window.JEON_AI_API_URL || '/api/chat';
     const sessionId = 'sess_' + Math.random().toString(36).slice(2, 10);
 
-    function addMsg(text, isUser) {
+    function addMsg(text, isUser, isHtml) {
         const welcome = document.getElementById('jeon-ai-welcome');
         if (welcome) welcome.style.display = 'none';
 
         const div = document.createElement('div');
         div.className = `jeon-msg ${isUser ? 'user' : 'ai'}`;
         if (!isUser) {
-            div.innerHTML = `<div class="jeon-sender">전용관 AI</div>${formatText(text)}`;
+            const content = isHtml ? text : formatText(text);
+            div.innerHTML = `<div class="jeon-sender">전용관 AI</div>${content}`;
         } else {
             div.textContent = text;
         }
@@ -564,46 +565,20 @@
                 body: JSON.stringify({ message: msg, session_id: sessionId })
             });
 
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || 'Server error');
-            }
-
             hideTyping();
 
-            // 스트리밍 응답 처리
-            const streamDiv = addStreamMsg();
-            const textSpan = streamDiv.querySelector('.jeon-stream-text');
-            let fullText = '';
-
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.text) {
-                                fullText += data.text;
-                                textSpan.innerHTML = formatText(fullText);
-                                messages.scrollTop = messages.scrollHeight;
-                            }
-                        } catch(e) {}
-                    }
-                }
+            if (!res.ok) {
+                let errMsg = 'Server error';
+                try { const err = await res.json(); errMsg = err.error || errMsg; } catch(e) {}
+                throw new Error(errMsg);
             }
 
-            // 최종 렌더링
-            textSpan.innerHTML = formatText(fullText);
+            const data = await res.json();
+            if (data.text) {
+                addMsg(formatText(data.text), false);
+            } else if (data.error) {
+                throw new Error(data.error);
+            }
 
         } catch (err) {
             hideTyping();
