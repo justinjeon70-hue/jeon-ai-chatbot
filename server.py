@@ -8,9 +8,9 @@ Claude API를 연결하여 실시간 AI 답변을 제공합니다.
 """
 import os
 import json
+import requests as http_requests
 from flask import Flask, request, Response, send_from_directory, stream_with_context
 from flask_cors import CORS
-from anthropic import Anthropic
 from dotenv import load_dotenv
 
 # .env 파일에서 환경변수 로드
@@ -138,16 +138,28 @@ def chat():
     history = conversations[session_id][-10:]
 
     try:
-        client = Anthropic(api_key=API_KEY)
-
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=MAX_TOKENS,
-            system=SYSTEM_PROMPT,
-            messages=history
+        api_response = http_requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key": API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json"
+            },
+            json={
+                "model": MODEL,
+                "max_tokens": MAX_TOKENS,
+                "system": SYSTEM_PROMPT,
+                "messages": history
+            },
+            timeout=60
         )
 
-        assistant_text = response.content[0].text
+        if api_response.status_code != 200:
+            error_body = api_response.text
+            return json.dumps({"error": f"Anthropic API error: {error_body}"}), 500, {"Content-Type": "application/json"}
+
+        result = api_response.json()
+        assistant_text = result["content"][0]["text"]
 
         # 응답을 히스토리에 추가
         conversations[session_id].append({
