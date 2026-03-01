@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전용관 AI — 운동건강 어드바이저</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f7f8fc;
+            color: #1a1a2e;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 12px rgba(26, 35, 126, 0.3);
+        }
+
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .header-text h1 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header-text p {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Chat Area */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            line-height: 1.7;
+            font-size: 14.5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: white;
+            border: 1px solid #e8eaf6;
+            border-radius: 4px 16px 16px 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #1a237e, #3949ab);
+            color: white;
+            border-radius: 16px 4px 16px 16px;
+        }
+
+        .message.ai .sender {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1a237e;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .message.ai strong {
+            color: #1a237e;
+        }
+
+        .message.ai em {
+            color: #5c6bc0;
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        /* Welcome Card */
+        .welcome-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid #e8eaf6;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            text-align: center;
+            max-width: 500px;
+            align-self: center;
+            margin: 20px 0;
+        }
+
+        .welcome-card h2 {
+            color: #1a237e;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .welcome-card p {
+            color: #666;
+            font-size: 13.5px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .welcome-card .philosophy {
+            background: #f5f5ff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .welcome-card .philosophy .tag {
+            display: inline-block;
+            background: #e8eaf6;
+            color: #1a237e;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin: 2px;
+        }
+
+        .example-questions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .example-q {
+            background: #f5f5ff;
+            border: 1px solid #e8eaf6;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #3949ab;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .example-q:hover {
+            background: #e8eaf6;
+            border-color: #c5cae9;
+            transform: translateX(4px);
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 16px 24px;
+            background: white;
+            border-top: 1px solid #e8eaf6;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e8eaf6;
+            border-radius: 12px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+            max-height: 120px;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            border-color: #3949ab;
+        }
+
+        textarea::placeholder {
+            color: #aaa;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #1a237e, #3949ab);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, box-shadow 0.15s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Typing indicator */
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: #c5cae9;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            padding: 8px 24px 12px;
+            background: white;
+        }
+
+        /* Scrollbar */
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #c5cae9;
+            border-radius: 3px;
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            .message { max-width: 92%; font-size: 14px; }
+            .header { padding: 12px 16px; }
+            .chat-container { padding: 16px; }
+            .input-area { padding: 12px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-icon">JY</div>
+        <div class="header-text">
+            <h1>전용관 AI</h1>
+            <p>운동의학 & 살루토제네시스 | 연세대학교 ICONS</p>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="welcome-card">
+            <h2>안녕하세요!</h2>
+            <p>근거 기반 운동의학과 전용관 교수의 살루토제네시스 철학을 기반으로 한<br>운동건강 AI 어드바이저입니다.</p>
+            <div class="philosophy">
+                <span class="tag">살루토제네시스</span>
+                <span class="tag">운동이 약이다</span>
+                <span class="tag">근육이 약이다</span>
+                <span class="tag">옥시토신</span>
+                <span class="tag">E-factor</span>
+                <span class="tag">성장 vs 생존</span>
+            </div>
+            <div class="example-questions">
+                <div class="example-q" onclick="askExample(this)">항암치료 중인데, 운동해도 괜찮을까요?</div>
+                <div class="example-q" onclick="askExample(this)">치매 예방을 위해 어떤 운동을 해야 하나요?</div>
+                <div class="example-q" onclick="askExample(this)">당뇨병 진단을 받았는데, 운동으로 나을 수 있나요?</div>
+                <div class="example-q" onclick="askExample(this)">아이가 ADHD 진단을 받았어요. 운동이 도움이 될까요?</div>
+                <div class="example-q" onclick="askExample(this)">잠을 잘 못 자는데, 운동이 수면에 도움이 되나요?</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-wrapper">
+            <textarea
+                id="userInput"
+                placeholder="운동과 건강에 대해 무엇이든 물어보세요..."
+                rows="1"
+                onkeydown="handleKeydown(event)"
+                oninput="autoResize(this)"
+            ></textarea>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
+            </svg>
+        </button>
+    </div>
+    <div class="disclaimer">
+        이 AI는 의학적 진단이나 치료를 대체하지 않습니다. 구체적인 건강 문제는 전문 의료진과 상담하세요.
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // Demo responses based on keywords — v1.1 balanced citation style
+        const responses = {
+            "항암": `많이 걱정되시죠. "암 환자는 쉬어야 한다"는 말을 주변에서 많이 들으셨을 겁니다.\n\n결론부터 말씀드리면, <strong>운동은 암 환자에게 가장 강력한 약 중 하나입니다.</strong> 미국스포츠의학회(ACSM)는 2019년 라운드테이블 합의문에서 암 환자에게 주당 150분 이상의 중강도 운동을 권고하고 있습니다.\n\n대규모 연구들이 이를 뒷받침합니다:\n• 신체활동이 높은 대장암 환자는 <em>재발 위험이 약 30-40% 감소</em> (JAMA, 2005; JCO, 2006)\n• 유방암 환자에서도 운동은 암 사망률을 유의하게 낮춤 (Holmes et al., JAMA, 2005)\n• 국내 연구에서도 대장암 수술 후 운동의 배변기능 장애 예방 효과가 6.54배로 확인되었습니다\n\n살루토제네시스 관점에서 보면, 운동은 단순한 재활이 아니라 <em>'좋은 스트레스'</em>로서 우리 몸을 더 강하게 만드는 과정입니다.\n\n다만 몇 가지 주의사항이 있습니다:\n• 혈소판·백혈구 수치를 확인한 후 운동 강도를 조절하세요\n• 항암 치료 당일보다는 컨디션이 좋은 날에 시작하세요\n• 처음에는 가볍게 걷기부터 시작하여 점차 늘려가세요\n\n중요한 것은 "쉬세요"가 아니라 <strong>"움직이세요"</strong>입니다. 구체적인 운동 계획은 담당 의료진과 상의하시는 것이 좋습니다.`,
+
+            "치매": `좋은 질문입니다. 최근 의학계에서는 치매를 <strong>'3형 당뇨병'</strong>으로 보는 관점이 주목받고 있습니다. <em>Lancet Commission(2020)</em>에서도 신체활동 부족을 치매의 12가지 수정 가능한 위험요인 중 하나로 선정했습니다.\n\n핵심은 <strong>브레인 인슐린 저항성</strong>입니다. 우리 뇌의 에너지 공장인 미토콘드리아(세포 속 에너지 발전소)가 제대로 작동하지 않으면 기억력, 집중력, 감정 조절이 모두 영향을 받습니다. 전용관 교수는 이 기전을 P-factor 이론으로 체계화했습니다.\n\n<strong>운동은 이 브레인 인슐린 저항성을 개선시키는 가장 효과적인 방법입니다.</strong>\n\n구체적으로:\n• Erickson 등의 연구(PNAS, 2011)에서 유산소 운동이 해마 크기를 <em>2% 증가</em>시켰습니다. 운동하지 않은 그룹은 1.4% 감소했습니다\n• 핀란드 대규모 코호트 연구에서 체력이 높을수록 치매 발병률이 유의하게 낮았습니다\n• Cochrane Review에서도 운동의 인지기능 개선 효과가 확인되었습니다\n\n추천 운동:\n1. <strong>걷기</strong> (주 5회, 30분 이상) — WHO 권장 기준에 부합\n2. <strong>스쿼트, 까치발 들기, 허리 젖히기</strong> — 항노화 근력 운동 3종\n3. <strong>함께 운동하기</strong> — 사회적 활동이 결합되면 옥시토신까지 분비되어 시너지 효과\n\n혼자보다는 친구나 가족과 함께 운동하세요. 운동도 약이고, 함께하는 것도 약입니다.`,
+
+            "당뇨": `당뇨병 진단을 받으셨군요. 걱정이 많으시겠지만, 희망적인 연구 결과들을 먼저 소개해 드리겠습니다.\n\n미국 DPP 연구(NEJM, 2002)에서, <strong>운동을 포함한 생활습관 개선은 당뇨병 발병 위험을 58% 감소</strong>시켰습니다. 약물(메트포민)의 31%보다 거의 두 배 효과적이었습니다.\n\n더 놀라운 사실은, 당뇨병 <em>'관해(remission)'</em>도 가능하다는 것입니다:\n• UK DiRECT 연구(Lancet, 2018): 생활습관 중재군 <strong>46%가 당뇨병 관해</strong>\n• DIADEM-I 연구(Lancet DE, 2020): <strong>61%가 관해</strong> (약물군은 12%)\n\n국내에서도 유사한 결과가 확인되었는데, 12주간의 운동+생활습관 프로그램 후 당화혈색소(HbA1c)가 7.5%에서 6.5%로 감소했습니다(Clinical Endocrinology, 2014). 이는 DPP-4 억제제(0.6% 감소)보다 우월한 결과입니다.\n\n<strong>운동이 약보다 강력한 이유:</strong>\n약은 혈당만 조절하지만, 운동은 인슐린 저항성의 근본 원인인 미토콘드리아 기능을 개선합니다. 이것이 살루토제네시스 관점에서 말하는 '원인 치료'입니다.\n\n담당 의료진과 상의하여 약물 치료와 함께 운동을 시작하세요. 운동은 약입니다. 그것도 가장 강력한 약입니다.`,
+
+            "ADHD": `걱정이 크시겠습니다. ADHD와 운동에 대한 최신 연구들을 바탕으로 말씀드릴게요.\n\n최근 메타분석들(Cerrillo-Urbina et al., 2015; Vysniauske et al., 2020)에서 <strong>운동이 ADHD 아동·청소년의 주의력, 충동 억제, 실행기능을 유의하게 개선</strong>하는 것이 확인되었습니다. 특히 중고강도 유산소 운동이 효과적입니다.\n\n이것을 뇌 에너지 관점(P-factor)에서 보면 이해가 쉽습니다. 우리 뇌에는 세 가지 핵심 네트워크가 있습니다:\n• <strong>DMN</strong> (기본모드 네트워크) — ADHD에서 과다 활성화 → 멍함, 산만\n• <strong>SN</strong> (현저성 네트워크) — 약화 → 중요한 것에 집중 실패\n• <strong>CEN</strong> (중앙실행 네트워크) — 약화 → 계획, 조직, 작업기억 저하\n\n운동은 미토콘드리아 기능을 개선하여 이 네트워크 균형을 회복시킵니다.\n\n실천 방법:\n• 앉아서 공부만 시키지 마세요. <strong>운동 후에 공부하면 집중력이 올라갑니다</strong> (Hillman et al., Pediatrics, 2014)\n• 심폐체력은 수학, 영어 독해 능력과 상관관계가 있습니다 (Castelli et al., 2007)\n• 심장을 뛰게 하는 운동(달리기, 수영, 자전거)을 주 3-5회 권장합니다\n\n"심장을 뛰게 하라, 똑똑해지리라." 약물 치료와 함께 운동을 병행하면 시너지 효과를 기대할 수 있습니다.`,
+
+            "수면": `수면 문제로 힘드시군요. 수면과 운동의 관계에 대해 과학적 근거를 바탕으로 설명드리겠습니다.\n\n우리가 잠이 드는 핵심 기전 중 하나는 <strong>아데노신</strong>이라는 물질입니다. 낮 동안 활동하면 뇌에 아데노신이 쌓이고, 이것이 수면 압력을 만듭니다.\n\n운동은 ATP 소모를 통해 아데노신 생성을 크게 높여줍니다:\n• 안정 시: 기본량\n• 중강도 운동: <em>약 5배 증가</em>\n• 고강도 운동: <em>10-20배 증가</em>\n\n즉, <strong>운동은 가장 자연스러운 수면제</strong>입니다. Kovacevic 등의 메타분석(Sleep Medicine Reviews, 2018)에서도 규칙적 운동이 수면의 질을 유의하게 개선하는 것으로 나타났습니다.\n\n추가로 알아두실 점:\n• 수면 부족은 인슐린 저항성을 <em>16-32% 높입니다</em> (Spiegel et al., Lancet, 1999)\n• 5시간 미만 수면 시 대사증후군 위험 1.5배 증가\n• <strong>시간제한 식이</strong>(예: 12시간 내 식사)는 수면의 질을 23% 개선\n• 정제 탄수화물과 설탕을 많이 먹으면 불면증 위험 증가 (Gangwisch et al., AJCN, 2020)\n\n실천 팁:\n1. 낮에 중강도 이상 운동하기 (저녁 늦은 운동은 피하기)\n2. 저녁 식사 후 야식 줄이기 (시간제한 식이)\n3. 카페인은 아데노신 수용체를 차단하므로, 오후 2시 이후 섭취를 제한하세요\n\n잠도 약이고, 운동도 약입니다. 둘을 함께 챙기세요.`,
+
+            "살루토": `<strong>살루토제네시스(Salutogenesis)</strong>는 이스라엘 의료사회학자 Aaron Antonovsky가 1979년에 제안한 개념으로, 전용관 교수가 운동의학에 접목하여 발전시킨 핵심 철학입니다.\n\n기존 의학은 <em>"왜 아픈가?(Pathogenesis)"</em>를 물었습니다. 세균이 침입해서, 유전자에 문제가 있어서, 나이가 들어서... 질병의 원인을 찾고 제거하는 것이 목표였죠.\n\n살루토제네시스는 반대로 묻습니다:\n<strong>"왜 건강한가? 같은 환경에서도 왜 어떤 사람은 건강한가?"</strong>\n\n핵심 개념들:\n\n1. <strong>Ease ↔ Dis-ease 연속선</strong>\nWHO도 건강을 "단순히 질병이 없는 상태가 아닌, 신체적·정신적·사회적으로 완전한 안녕 상태"라고 정의합니다. 환자와 건강인의 이분법은 없습니다.\n\n2. <strong>Terrain Theory</strong>\nLancet(2024)의 분석에서도 선진국의 주요 사망원인은 감염병이 아닌 생활습관·대사성 위험요인입니다. 외부 병원균보다 내부 환경이 건강을 결정합니다.\n\n3. <strong>도전과 응전</strong>\n역사학자 토인비가 말했듯, "역사는 도전(challenge)과 응전(response)의 다이나믹이다." 어항 속 안전한 삶은 생존율은 높지만 성장은 없습니다. 운동이라는 '좋은 스트레스'가 우리를 더 강하게 만듭니다.\n\n<strong>"나의 건강의 목적은 생존인가, 성장인가?"</strong>\n\n이 질문이 살루토제네시스의 출발점입니다.`,
+
+            "근육": `근육의 중요성은 최근 의학계에서 점점 더 주목받고 있습니다. <strong>"근육이 약이다"</strong>라는 관점에서 설명드리겠습니다.\n\n근육은 단순히 힘을 쓰기 위한 조직이 아닙니다. <strong>마이오카인(myokine)</strong>이라는 물질을 분비하여 전신 건강에 영향을 미치는 내분비 기관입니다 (Pedersen & Febbraio, Nature Reviews Endocrinology, 2012).\n\n수치로 보면:\n• 근육량이 많은 사람(상위 33%)은 심혈관 질환 위험이 <em>81% 낮습니다</em> (Srikanthan et al., AJCN, 2014)\n• 근육량이 적은 사람(하위 25%)은 당뇨병 위험이 <em>3.5배 높습니다</em>\n• EWGSOP2(유럽근감소증학회, 2019)에서는 근감소증을 질병으로 분류했습니다\n\n노화에 따라 가장 빨리 약해지는 근육 부위를 기반으로 한 <strong>항노화 핵심 운동 3가지</strong> (Danneskiold et al., 2009):\n\n1. <strong>스쿼트</strong> — 무릎을 펴는 근력이 노화와 함께 ~20% 감소합니다\n2. <strong>까치발 들기</strong> — 발목 신전근은 보행과 낙상 예방의 핵심\n3. <strong>허리 뒤로 젖히기</strong> — 몸통 신전근 약화가 자세 변형의 원인\n\n중요한 관점 전환:\n근골격 문제를 <em>구조적(Structural)</em> 접근만이 아닌 <em>기능적(Functional)</em> 접근으로 보는 것이 최신 트렌드입니다. MRI 찍고 수술하는 것만이 답이 아닙니다. 근력 균형을 회복하면 많은 문제가 개선됩니다.\n\n"노화되어서 근육이 주는 걸까요? 근육이 줄어서 노화가 진행되는 걸까요?"\n답은 후자에 가깝습니다. <strong>근육을 지키는 것이 곧 젊음을 지키는 것입니다.</strong>`,
+
+            "옥시토신": `<strong>"Love is a polypill"</strong> — 사회적 관계가 건강에 미치는 영향은 과학적으로 잘 입증되어 있습니다.\n\nHolt-Lunstad 등의 대규모 메타분석(PLOS Medicine, 2010)에 따르면, <em>강한 사회적 관계를 가진 사람은 생존율이 50% 높았습니다.</em> 이 효과는 금연, 운동의 효과에 필적합니다.\n\n이 사회적 연결의 생물학적 매개체가 바로 <strong>옥시토신</strong>입니다. 전용관 교수의 저서 『옥시토신 이야기』에서 이 기전을 깊이 다루고 있습니다.\n\n<strong>옥시토신의 효과 (연구 근거):</strong>\n• 암세포 증식 억제 — 유방암, 대장암, 난소암 세포 실험 연구\n• 치매 증상(기억력) 개선 — 동물 모델 연구\n• 우울 감소, 회복탄력성 증가 — Psychoneuroendocrinology 다수 논문\n• 상처 회복력 증가 — Kiecolt-Glaser et al. (2005)\n• 혈압 감소 — Light et al., Biological Psychology (2005)\n\n<strong>옥시토신을 높이는 7가지 방법:</strong>\n1. 함께 밥 먹기 — "라면은 혼자 먹지 마세요"\n2. 스킨십 — 허그를 자주 할수록 혈압이 낮습니다\n3. 운동 — 특히 함께 하는 운동\n4. 반려동물 — 눈 마주치기, 쓰다듬기 (Nagasawa et al., Science, 2015)\n5. 합창 — 함께 노래하기\n6. 친구와 수다 — 사회적 유대감\n7. 자원봉사 — 이타적 행동\n\n<strong>운동도 약이고, 사랑도 약입니다. 함께 운동하면 두 가지 약을 동시에 먹는 셈이죠.</strong>`
+        };
+
+        function getResponse(message) {
+            const msg = message.toLowerCase();
+            for (const [keyword, response] of Object.entries(responses)) {
+                if (msg.includes(keyword)) return response;
+            }
+            // Default response
+            return `좋은 질문입니다. 근거 기반 운동의학과 살루토제네시스 관점에서 답변드리겠습니다.\n\n건강은 단순히 질병이 없는 상태가 아닙니다. WHO도 정의하듯, 우리 모두는 Ease(편안함)와 Dis-ease(불편함)의 연속선 위에 있으며, <strong>운동, 영양, 수면, 그리고 사회적 관계</strong>를 통해 Ease 쪽으로 이동할 수 있습니다.\n\n이 AI의 핵심 메시지는 이것입니다:\n<em>"쉬세요가 아닙니다. 움직이세요."</em>\n\n더 구체적인 답변을 드리기 위해, 어떤 건강 주제에 관심이 있으신지 알려주시겠어요?\n\n• 암과 운동 (ACSM 가이드라인 기반)\n• 당뇨병과 생활습관 (DPP, DiRECT 연구)\n• 치매 예방 (Lancet Commission 권고)\n• 근력과 노화 (근감소증, 마이오카인)\n• 수면 건강 (아데노신, 시간제한 식이)\n• 옥시토신과 사회적 관계\n• 아동·청소년 건강 (ADHD, ASD)`;
+        }
+
+        function addMessage(text, isUser) {
+            const welcome = document.querySelector('.welcome-card');
+            if (welcome) welcome.style.display = 'none';
+
+            const div = document.createElement('div');
+            div.className = `message ${isUser ? 'user' : 'ai'}`;
+
+            if (!isUser) {
+                div.innerHTML = `<div class="sender">전용관 AI</div>${text.replace(/\n/g, '<br>')}`;
+            } else {
+                div.textContent = text;
+            }
+
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addTypingIndicator() {
+            const div = document.createElement('div');
+            div.className = 'message ai';
+            div.id = 'typing';
+            div.innerHTML = `<div class="sender">전용관 AI</div><div class="typing"><span></span><span></span><span></span></div>`;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, true);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            sendBtn.disabled = true;
+
+            addTypingIndicator();
+
+            // Simulate AI response delay
+            setTimeout(() => {
+                removeTypingIndicator();
+                addMessage(getResponse(text), false);
+                sendBtn.disabled = false;
+            }, 1200 + Math.random() * 800);
+        }
+
+        function askExample(el) {
+            userInput.value = el.textContent;
+            sendMessage();
+        }
+
+        function handleKeydown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+    </script>
+    <script src="jeon-ai-widget.js"></script>
+</body>
+</html>
