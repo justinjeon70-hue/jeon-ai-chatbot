@@ -561,6 +561,182 @@
             margin-left: 6px;
         }
 
+        /* ── 건강 위험 평가 ── */
+        .jeon-assess-btns {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .jeon-assess-btn {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+            border: 1px solid #bfd4f5;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0055b3;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: Inter, -apple-system, sans-serif;
+        }
+
+        .jeon-assess-btn:hover {
+            background: linear-gradient(135deg, #e8f0fe 0%, #d0e2fc 100%);
+            border-color: #0071e3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 113, 227, 0.15);
+        }
+
+        .jeon-assess-form {
+            background: #f8f9fb;
+            border: 1px solid #e8e8ed;
+            border-radius: 14px;
+            padding: 14px;
+            margin: 0;
+            max-width: 100%;
+        }
+
+        .jeon-assess-form h5 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 10px 0;
+        }
+
+        .jeon-assess-field {
+            margin-bottom: 8px;
+        }
+
+        .jeon-assess-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: #6e6e73;
+            margin-bottom: 3px;
+        }
+
+        .jeon-assess-field select,
+        .jeon-assess-field input {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #e8e8ed;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-family: Inter, -apple-system, sans-serif;
+            color: #1d1d1f;
+            background: white;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .jeon-assess-field select:focus,
+        .jeon-assess-field input:focus {
+            border-color: #0071e3;
+        }
+
+        .jeon-assess-submit {
+            width: 100%;
+            padding: 9px;
+            background: linear-gradient(135deg, #0071e3, #0055b3);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: transform 0.15s, box-shadow 0.15s;
+            font-family: Inter, -apple-system, sans-serif;
+        }
+
+        .jeon-assess-submit:hover {
+            transform: scale(1.02);
+            box-shadow: 0 3px 10px rgba(0, 113, 227, 0.3);
+        }
+
+        .jeon-risk-result {
+            background: white;
+            border: 1px solid #e8e8ed;
+            border-radius: 14px;
+            padding: 14px;
+            max-width: 100%;
+        }
+
+        .jeon-risk-result h5 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 8px 0;
+        }
+
+        .jeon-risk-meter {
+            background: #f0f0f5;
+            border-radius: 8px;
+            height: 14px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .jeon-risk-bar {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.6s ease;
+        }
+
+        .jeon-risk-label {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .jeon-risk-score {
+            font-size: 11px;
+            color: #6e6e73;
+            margin-bottom: 10px;
+        }
+
+        .jeon-recommend {
+            background: #f8f9fb;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 8px;
+        }
+
+        .jeon-recommend h6 {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0055b3;
+            margin: 0 0 4px 0;
+        }
+
+        .jeon-recommend p {
+            font-size: 11.5px;
+            color: #1d1d1f;
+            margin: 0 0 6px 0;
+            line-height: 1.6;
+        }
+
+        .jeon-risk-citation {
+            font-size: 10px;
+            color: #a1a1a6;
+            margin-top: 8px;
+            line-height: 1.5;
+            border-top: 1px solid #f0f0f5;
+            padding-top: 8px;
+        }
+
+        .jeon-risk-disclaimer {
+            font-size: 10px;
+            color: #ff9500;
+            margin-top: 6px;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
         /* ── 모바일 반응형 ── */
         @media (max-width: 480px) {
             #jeon-ai-chat {
@@ -648,6 +824,11 @@
                         <span class="jeon-tag">E-factor</span>
                     </div>
                     <div id="jeon-ai-examples"></div>
+                    <div class="jeon-assess-btns">
+                        <button class="jeon-assess-btn" data-assess="diabetes">🩺 당뇨 위험 평가</button>
+                        <button class="jeon-assess-btn" data-assess="ckd">🏥 신부전 위험 평가</button>
+                        <button class="jeon-assess-btn" data-assess="cancer">🎗 암 재발 위험 평가</button>
+                    </div>
                 </div>
             </div>
 
@@ -1098,6 +1279,215 @@
             conversationHistory.push(...history);
         }
     } catch(e) {}
+
+    // ═══════════════════════════════════════════
+    // 건강 위험 평가 모델
+    // ═══════════════════════════════════════════
+    const RISK_MODELS = {
+        diabetes: {
+            title: '미진단 당뇨 위험 평가',
+            citation: 'Park & Jeon (Epid Health 2022); Park et al. (NMCD 2023); Park et al. (KSEP 2020)',
+            maxScore: 20,
+            levels: [
+                { max: 5, label: '낮음', color: '#34c759', emoji: '🟢' },
+                { max: 10, label: '보통', color: '#ff9500', emoji: '🟡' },
+                { max: 14, label: '높음', color: '#ff6b35', emoji: '🟠' },
+                { max: 20, label: '매우 높음', color: '#ff3b30', emoji: '🔴' }
+            ],
+            fields: [
+                { id: 'gender', label: '성별', type: 'select', options: [['male','남성'],['female','여성']] },
+                { id: 'age', label: '나이', type: 'number', placeholder: '예: 55', min: 20, max: 100 },
+                { id: 'rhr', label: '안정시 심박수 (bpm)', type: 'number', placeholder: '예: 72', min: 40, max: 150 },
+                { id: 'wc', label: '허리둘레 (cm)', type: 'number', placeholder: '예: 90', min: 50, max: 160 }
+            ],
+            calculate: function(v) {
+                var score = 0;
+                var age = parseInt(v.age);
+                if (age >= 70) score += 7;
+                else if (age >= 60) score += 6;
+                else if (age >= 50) score += 5;
+                else if (age >= 40) score += 3;
+                else if (age >= 30) score += 1;
+                var rhr = parseInt(v.rhr);
+                var isMale = v.gender === 'male';
+                if (rhr >= 90) score += isMale ? 6 : 5;
+                else if (rhr >= 80) score += isMale ? 4 : 3;
+                else if (rhr >= 70) score += 2;
+                else if (rhr >= 60) score += 1;
+                var wc = parseInt(v.wc);
+                if (isMale) {
+                    if (wc >= 95) score += 6;
+                    else if (wc >= 90) score += 4;
+                    else if (wc >= 85) score += 2;
+                } else {
+                    if (wc >= 90) score += 6;
+                    else if (wc >= 85) score += 4;
+                    else if (wc >= 80) score += 2;
+                }
+                return score;
+            }
+        },
+        ckd: {
+            title: '당뇨 환자 신부전 위험 평가',
+            citation: 'Park & Jeon (BMC Public Health 2024)',
+            maxScore: 16,
+            levels: [
+                { max: 4, label: '낮음', color: '#34c759', emoji: '🟢' },
+                { max: 8, label: '보통', color: '#ff9500', emoji: '🟡' },
+                { max: 12, label: '높음', color: '#ff6b35', emoji: '🟠' },
+                { max: 16, label: '매우 높음', color: '#ff3b30', emoji: '🔴' }
+            ],
+            fields: [
+                { id: 'gender', label: '성별', type: 'select', options: [['male','남성'],['female','여성']] },
+                { id: 'age', label: '나이', type: 'number', placeholder: '예: 60', min: 20, max: 100 },
+                { id: 'rhr', label: '안정시 심박수 (bpm)', type: 'number', placeholder: '예: 75', min: 40, max: 150 },
+                { id: 'duration', label: '당뇨 유병기간 (년)', type: 'number', placeholder: '예: 8', min: 0, max: 50 },
+                { id: 'hypertension', label: '고혈압 여부', type: 'select', options: [['no','없음'],['yes','있음']] }
+            ],
+            calculate: function(v) {
+                var score = 0;
+                var rhr = parseInt(v.rhr);
+                if (rhr >= 100) score += 5;
+                else if (rhr >= 90) score += 4;
+                else if (rhr >= 80) score += 3;
+                else if (rhr >= 70) score += 2;
+                else if (rhr >= 60) score += 1;
+                var age = parseInt(v.age);
+                if (age >= 70) score += 4;
+                else if (age >= 60) score += 3;
+                else if (age >= 50) score += 2;
+                else if (age >= 40) score += 1;
+                var dur = parseInt(v.duration);
+                if (dur >= 15) score += 3;
+                else if (dur >= 10) score += 2;
+                else if (dur >= 5) score += 1;
+                if (v.hypertension === 'yes') score += 2;
+                if (v.gender === 'male') score += 2;
+                return score;
+            }
+        },
+        cancer: {
+            title: '대장암 재발 위험 평가',
+            citation: 'Park & Jeon (PLOS ONE 2018); Cho & Jeon (Cancer Epi 2025)',
+            maxScore: 14,
+            levels: [
+                { max: 3, label: '낮음', color: '#34c759', emoji: '🟢' },
+                { max: 7, label: '보통', color: '#ff9500', emoji: '🟡' },
+                { max: 10, label: '높음', color: '#ff6b35', emoji: '🟠' },
+                { max: 14, label: '매우 높음', color: '#ff3b30', emoji: '🔴' }
+            ],
+            fields: [
+                { id: 'rhr', label: '안정시 심박수 (bpm)', type: 'number', placeholder: '예: 72', min: 40, max: 150 },
+                { id: 'bodyfat', label: '체지방률 (%)', type: 'select', options: [['normal','정상 (남<20/여<28)'],['over','과체중 (남20-25/여28-33)'],['obese','비만 (남25-30/여33-38)'],['severe','고도비만 (남>30/여>38)']] },
+                { id: 'activity', label: '주간 신체활동', type: 'select', options: [['active','활동적 (≥150분/주)'],['moderate','보통 (75-149분/주)'],['low','부족 (1-74분/주)'],['inactive','비활동 (거의 안 함)']] },
+                { id: 'stage', label: '대장암 병기', type: 'select', options: [['1','I기'],['2','II기'],['3','III기'],['4','IV기']] }
+            ],
+            calculate: function(v) {
+                var score = 0;
+                var rhr = parseInt(v.rhr);
+                if (rhr >= 100) score += 5;
+                else if (rhr >= 90) score += 4;
+                else if (rhr >= 80) score += 3;
+                else if (rhr >= 70) score += 2;
+                else if (rhr >= 60) score += 1;
+                var bf = { normal: 0, over: 1, obese: 2, severe: 3 };
+                score += bf[v.bodyfat] || 0;
+                var act = { active: 0, moderate: 1, low: 2, inactive: 3 };
+                score += act[v.activity] || 0;
+                score += (parseInt(v.stage) - 1);
+                return score;
+            }
+        }
+    };
+
+    const EXERCISE_RECS = {
+        '낮음': '현재 생활습관을 유지하세요. 주 150분 중강도 유산소 운동 + 주 2회 근력 운동을 권장합니다.',
+        '보통': '주 150~300분 유산소 운동, 주 2~3회 근력 운동(스쿼트·까치발·허리 젖히기)을 권장합니다. 매일 30분 걷기를 실천하세요.',
+        '높음': '전문가 상담 후 점진적으로 시작하세요. 주 5회 30분 걷기, 식후 15분 걷기부터 시작하세요.',
+        '매우 높음': '의료진 상담이 필수입니다. 저강도 걷기부터 천천히 시작하고, 반드시 전문가의 관리를 받으세요.'
+    };
+
+    const DIET_RECS = {
+        diabetes: '시간제한 식이(12시간 내 식사), 정제 탄수화물 제한, 식이섬유 섭취를 늘리세요.',
+        ckd: '저단백 식이를 고려하고, 나트륨 섭취를 제한하며, 적절한 수분 관리가 중요합니다.',
+        cancer: '항염증 식이를 실천하세요. 채소·과일 섭취를 늘리고, 가공육을 제한하세요.'
+    };
+
+    function buildAssessmentForm(modelKey) {
+        var model = RISK_MODELS[modelKey];
+        var html = '<div class="jeon-assess-form" data-model="' + modelKey + '"><h5>' + model.title + '</h5>';
+        model.fields.forEach(function(f) {
+            html += '<div class="jeon-assess-field"><label>' + f.label + '</label>';
+            if (f.type === 'select') {
+                html += '<select data-field="' + f.id + '">';
+                f.options.forEach(function(opt) {
+                    html += '<option value="' + opt[0] + '">' + opt[1] + '</option>';
+                });
+                html += '</select>';
+            } else {
+                html += '<input type="number" data-field="' + f.id + '" placeholder="' + f.placeholder + '" min="' + f.min + '" max="' + f.max + '">';
+            }
+            html += '</div>';
+        });
+        html += '<button class="jeon-assess-submit" data-model="' + modelKey + '">평가하기</button></div>';
+        return html;
+    }
+
+    function getRiskLevel(modelKey, score) {
+        var model = RISK_MODELS[modelKey];
+        for (var i = 0; i < model.levels.length; i++) {
+            if (score <= model.levels[i].max) return model.levels[i];
+        }
+        return model.levels[model.levels.length - 1];
+    }
+
+    function generateResult(modelKey, score) {
+        var model = RISK_MODELS[modelKey];
+        var level = getRiskLevel(modelKey, score);
+        var pct = Math.min(Math.round((score / model.maxScore) * 100), 100);
+        var html = '<div class="jeon-risk-result">';
+        html += '<h5>' + model.title + ' 결과</h5>';
+        html += '<div class="jeon-risk-meter"><div class="jeon-risk-bar" style="width:' + pct + '%;background:' + level.color + ';"></div></div>';
+        html += '<div class="jeon-risk-label" style="color:' + level.color + ';">' + level.emoji + ' ' + level.label + ' 위험</div>';
+        html += '<div class="jeon-risk-score">점수: ' + score + ' / ' + model.maxScore + '</div>';
+        html += '<div class="jeon-recommend"><h6>🏃 운동 권고</h6><p>' + EXERCISE_RECS[level.label] + '</p></div>';
+        html += '<div class="jeon-recommend"><h6>🥗 식이 권고</h6><p>' + DIET_RECS[modelKey] + '</p></div>';
+        html += '<div class="jeon-risk-citation">📚 근거: ' + model.citation + '</div>';
+        html += '<div class="jeon-risk-disclaimer">⚠️ 이 평가는 전용관 교수 연구팀의 논문에 기반한 참고용 도구이며, 의학적 진단을 대체하지 않습니다.</div>';
+        html += '</div>';
+        return html;
+    }
+
+    // 평가 버튼 클릭 핸들러
+    document.querySelectorAll('.jeon-assess-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var modelKey = btn.getAttribute('data-assess');
+            var welcome = document.getElementById('jeon-ai-welcome');
+            if (welcome) welcome.style.display = 'none';
+            var div = document.createElement('div');
+            div.className = 'jeon-msg ai';
+            div.innerHTML = '<div class="jeon-sender">전용관 AI</div>' + buildAssessmentForm(modelKey);
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            var submitBtn = div.querySelector('.jeon-assess-submit');
+            submitBtn.addEventListener('click', function() {
+                var form = div.querySelector('.jeon-assess-form');
+                var values = {};
+                var valid = true;
+                form.querySelectorAll('[data-field]').forEach(function(el) {
+                    values[el.getAttribute('data-field')] = el.value;
+                    if (el.type === 'number' && (!el.value || isNaN(el.value))) valid = false;
+                });
+                if (!valid) { alert('모든 항목을 입력해주세요.'); return; }
+                var score = RISK_MODELS[modelKey].calculate(values);
+                var resultDiv = document.createElement('div');
+                resultDiv.className = 'jeon-msg ai';
+                resultDiv.innerHTML = '<div class="jeon-sender">전용관 AI</div>' + generateResult(modelKey, score);
+                messages.appendChild(resultDiv);
+                messages.scrollTop = messages.scrollHeight;
+            });
+        });
+    });
 
     // 외부 API
     window.jeonAI = {

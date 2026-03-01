@@ -561,6 +561,182 @@
             margin-left: 6px;
         }
 
+        /* ── Health Risk Assessment ── */
+        .jeon-assess-btns {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .jeon-assess-btn {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+            border: 1px solid #bfd4f5;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0055b3;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: Inter, -apple-system, sans-serif;
+        }
+
+        .jeon-assess-btn:hover {
+            background: linear-gradient(135deg, #e8f0fe 0%, #d0e2fc 100%);
+            border-color: #0071e3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 113, 227, 0.15);
+        }
+
+        .jeon-assess-form {
+            background: #f8f9fb;
+            border: 1px solid #e8e8ed;
+            border-radius: 14px;
+            padding: 14px;
+            margin: 0;
+            max-width: 100%;
+        }
+
+        .jeon-assess-form h5 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 10px 0;
+        }
+
+        .jeon-assess-field {
+            margin-bottom: 8px;
+        }
+
+        .jeon-assess-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: #6e6e73;
+            margin-bottom: 3px;
+        }
+
+        .jeon-assess-field select,
+        .jeon-assess-field input {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #e8e8ed;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-family: Inter, -apple-system, sans-serif;
+            color: #1d1d1f;
+            background: white;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .jeon-assess-field select:focus,
+        .jeon-assess-field input:focus {
+            border-color: #0071e3;
+        }
+
+        .jeon-assess-submit {
+            width: 100%;
+            padding: 9px;
+            background: linear-gradient(135deg, #0071e3, #0055b3);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 4px;
+            transition: transform 0.15s, box-shadow 0.15s;
+            font-family: Inter, -apple-system, sans-serif;
+        }
+
+        .jeon-assess-submit:hover {
+            transform: scale(1.02);
+            box-shadow: 0 3px 10px rgba(0, 113, 227, 0.3);
+        }
+
+        .jeon-risk-result {
+            background: white;
+            border: 1px solid #e8e8ed;
+            border-radius: 14px;
+            padding: 14px;
+            max-width: 100%;
+        }
+
+        .jeon-risk-result h5 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 8px 0;
+        }
+
+        .jeon-risk-meter {
+            background: #f0f0f5;
+            border-radius: 8px;
+            height: 14px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .jeon-risk-bar {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.6s ease;
+        }
+
+        .jeon-risk-label {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .jeon-risk-score {
+            font-size: 11px;
+            color: #6e6e73;
+            margin-bottom: 10px;
+        }
+
+        .jeon-recommend {
+            background: #f8f9fb;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 8px;
+        }
+
+        .jeon-recommend h6 {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #0055b3;
+            margin: 0 0 4px 0;
+        }
+
+        .jeon-recommend p {
+            font-size: 11.5px;
+            color: #1d1d1f;
+            margin: 0 0 6px 0;
+            line-height: 1.6;
+        }
+
+        .jeon-risk-citation {
+            font-size: 10px;
+            color: #a1a1a6;
+            margin-top: 8px;
+            line-height: 1.5;
+            border-top: 1px solid #f0f0f5;
+            padding-top: 8px;
+        }
+
+        .jeon-risk-disclaimer {
+            font-size: 10px;
+            color: #ff9500;
+            margin-top: 6px;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
         /* ── Mobile Responsive ── */
         @media (max-width: 480px) {
             #jeon-ai-chat {
@@ -648,6 +824,11 @@
                         <span class="jeon-tag">E-factor</span>
                     </div>
                     <div id="jeon-ai-examples"></div>
+                    <div class="jeon-assess-btns">
+                        <button class="jeon-assess-btn" data-assess="diabetes">🩺 Diabetes Risk</button>
+                        <button class="jeon-assess-btn" data-assess="ckd">🏥 CKD Risk</button>
+                        <button class="jeon-assess-btn" data-assess="cancer">🎗 Cancer Recurrence</button>
+                    </div>
                 </div>
             </div>
 
@@ -1094,6 +1275,215 @@
             conversationHistory.push(...history);
         }
     } catch(e) {}
+
+    // ═══════════════════════════════════════════
+    // Health Risk Assessment Models
+    // ═══════════════════════════════════════════
+    const RISK_MODELS = {
+        diabetes: {
+            title: 'Undiagnosed Diabetes Risk Assessment',
+            citation: 'Park & Jeon (Epid Health 2022); Park et al. (NMCD 2023); Park et al. (KSEP 2020)',
+            maxScore: 20,
+            levels: [
+                { max: 5, label: 'Low', color: '#34c759', emoji: '🟢' },
+                { max: 10, label: 'Moderate', color: '#ff9500', emoji: '🟡' },
+                { max: 14, label: 'High', color: '#ff6b35', emoji: '🟠' },
+                { max: 20, label: 'Very High', color: '#ff3b30', emoji: '🔴' }
+            ],
+            fields: [
+                { id: 'gender', label: 'Gender', type: 'select', options: [['male','Male'],['female','Female']] },
+                { id: 'age', label: 'Age', type: 'number', placeholder: 'e.g. 55', min: 20, max: 100 },
+                { id: 'rhr', label: 'Resting Heart Rate (bpm)', type: 'number', placeholder: 'e.g. 72', min: 40, max: 150 },
+                { id: 'wc', label: 'Waist Circumference (cm)', type: 'number', placeholder: 'e.g. 90', min: 50, max: 160 }
+            ],
+            calculate: function(v) {
+                var score = 0;
+                var age = parseInt(v.age);
+                if (age >= 70) score += 7;
+                else if (age >= 60) score += 6;
+                else if (age >= 50) score += 5;
+                else if (age >= 40) score += 3;
+                else if (age >= 30) score += 1;
+                var rhr = parseInt(v.rhr);
+                var isMale = v.gender === 'male';
+                if (rhr >= 90) score += isMale ? 6 : 5;
+                else if (rhr >= 80) score += isMale ? 4 : 3;
+                else if (rhr >= 70) score += 2;
+                else if (rhr >= 60) score += 1;
+                var wc = parseInt(v.wc);
+                if (isMale) {
+                    if (wc >= 95) score += 6;
+                    else if (wc >= 90) score += 4;
+                    else if (wc >= 85) score += 2;
+                } else {
+                    if (wc >= 90) score += 6;
+                    else if (wc >= 85) score += 4;
+                    else if (wc >= 80) score += 2;
+                }
+                return score;
+            }
+        },
+        ckd: {
+            title: 'CKD Risk for Diabetes Patients',
+            citation: 'Park & Jeon (BMC Public Health 2024)',
+            maxScore: 16,
+            levels: [
+                { max: 4, label: 'Low', color: '#34c759', emoji: '🟢' },
+                { max: 8, label: 'Moderate', color: '#ff9500', emoji: '🟡' },
+                { max: 12, label: 'High', color: '#ff6b35', emoji: '🟠' },
+                { max: 16, label: 'Very High', color: '#ff3b30', emoji: '🔴' }
+            ],
+            fields: [
+                { id: 'gender', label: 'Gender', type: 'select', options: [['male','Male'],['female','Female']] },
+                { id: 'age', label: 'Age', type: 'number', placeholder: 'e.g. 60', min: 20, max: 100 },
+                { id: 'rhr', label: 'Resting Heart Rate (bpm)', type: 'number', placeholder: 'e.g. 75', min: 40, max: 150 },
+                { id: 'duration', label: 'Diabetes Duration (years)', type: 'number', placeholder: 'e.g. 8', min: 0, max: 50 },
+                { id: 'hypertension', label: 'Hypertension', type: 'select', options: [['no','No'],['yes','Yes']] }
+            ],
+            calculate: function(v) {
+                var score = 0;
+                var rhr = parseInt(v.rhr);
+                if (rhr >= 100) score += 5;
+                else if (rhr >= 90) score += 4;
+                else if (rhr >= 80) score += 3;
+                else if (rhr >= 70) score += 2;
+                else if (rhr >= 60) score += 1;
+                var age = parseInt(v.age);
+                if (age >= 70) score += 4;
+                else if (age >= 60) score += 3;
+                else if (age >= 50) score += 2;
+                else if (age >= 40) score += 1;
+                var dur = parseInt(v.duration);
+                if (dur >= 15) score += 3;
+                else if (dur >= 10) score += 2;
+                else if (dur >= 5) score += 1;
+                if (v.hypertension === 'yes') score += 2;
+                if (v.gender === 'male') score += 2;
+                return score;
+            }
+        },
+        cancer: {
+            title: 'Colorectal Cancer Recurrence Risk',
+            citation: 'Park & Jeon (PLOS ONE 2018); Cho & Jeon (Cancer Epi 2025)',
+            maxScore: 14,
+            levels: [
+                { max: 3, label: 'Low', color: '#34c759', emoji: '🟢' },
+                { max: 7, label: 'Moderate', color: '#ff9500', emoji: '🟡' },
+                { max: 10, label: 'High', color: '#ff6b35', emoji: '🟠' },
+                { max: 14, label: 'Very High', color: '#ff3b30', emoji: '🔴' }
+            ],
+            fields: [
+                { id: 'rhr', label: 'Resting Heart Rate (bpm)', type: 'number', placeholder: 'e.g. 72', min: 40, max: 150 },
+                { id: 'bodyfat', label: 'Body Fat (%)', type: 'select', options: [['normal','Normal (M<20/F<28)'],['over','Overweight (M20-25/F28-33)'],['obese','Obese (M25-30/F33-38)'],['severe','Severely Obese (M>30/F>38)']] },
+                { id: 'activity', label: 'Weekly Physical Activity', type: 'select', options: [['active','Active (≥150 min/wk)'],['moderate','Moderate (75-149 min/wk)'],['low','Low (1-74 min/wk)'],['inactive','Inactive (almost none)']] },
+                { id: 'stage', label: 'Cancer Stage', type: 'select', options: [['1','Stage I'],['2','Stage II'],['3','Stage III'],['4','Stage IV']] }
+            ],
+            calculate: function(v) {
+                var score = 0;
+                var rhr = parseInt(v.rhr);
+                if (rhr >= 100) score += 5;
+                else if (rhr >= 90) score += 4;
+                else if (rhr >= 80) score += 3;
+                else if (rhr >= 70) score += 2;
+                else if (rhr >= 60) score += 1;
+                var bf = { normal: 0, over: 1, obese: 2, severe: 3 };
+                score += bf[v.bodyfat] || 0;
+                var act = { active: 0, moderate: 1, low: 2, inactive: 3 };
+                score += act[v.activity] || 0;
+                score += (parseInt(v.stage) - 1);
+                return score;
+            }
+        }
+    };
+
+    const EXERCISE_RECS = {
+        'Low': 'Maintain your current lifestyle. Aim for 150 min/week moderate aerobic exercise + 2x/week strength training.',
+        'Moderate': 'Aim for 150-300 min/week aerobic exercise, 2-3x/week strength training (squats, calf raises, back extensions). Walk 30 minutes daily.',
+        'High': 'Consult a specialist before starting. Begin with walking 30 min 5x/week and 15-min walks after meals.',
+        'Very High': 'Medical consultation is essential. Start with low-intensity walking and work under professional supervision.'
+    };
+
+    const DIET_RECS = {
+        diabetes: 'Practice time-restricted eating (eat within 12 hours), limit refined carbohydrates, and increase dietary fiber.',
+        ckd: 'Consider a low-protein diet, limit sodium intake, and manage fluid intake carefully.',
+        cancer: 'Follow an anti-inflammatory diet. Increase vegetables and fruits, and limit processed meat.'
+    };
+
+    function buildAssessmentForm(modelKey) {
+        var model = RISK_MODELS[modelKey];
+        var html = '<div class="jeon-assess-form" data-model="' + modelKey + '"><h5>' + model.title + '</h5>';
+        model.fields.forEach(function(f) {
+            html += '<div class="jeon-assess-field"><label>' + f.label + '</label>';
+            if (f.type === 'select') {
+                html += '<select data-field="' + f.id + '">';
+                f.options.forEach(function(opt) {
+                    html += '<option value="' + opt[0] + '">' + opt[1] + '</option>';
+                });
+                html += '</select>';
+            } else {
+                html += '<input type="number" data-field="' + f.id + '" placeholder="' + f.placeholder + '" min="' + f.min + '" max="' + f.max + '">';
+            }
+            html += '</div>';
+        });
+        html += '<button class="jeon-assess-submit" data-model="' + modelKey + '">Assess</button></div>';
+        return html;
+    }
+
+    function getRiskLevel(modelKey, score) {
+        var model = RISK_MODELS[modelKey];
+        for (var i = 0; i < model.levels.length; i++) {
+            if (score <= model.levels[i].max) return model.levels[i];
+        }
+        return model.levels[model.levels.length - 1];
+    }
+
+    function generateResult(modelKey, score) {
+        var model = RISK_MODELS[modelKey];
+        var level = getRiskLevel(modelKey, score);
+        var pct = Math.min(Math.round((score / model.maxScore) * 100), 100);
+        var html = '<div class="jeon-risk-result">';
+        html += '<h5>' + model.title + ' Result</h5>';
+        html += '<div class="jeon-risk-meter"><div class="jeon-risk-bar" style="width:' + pct + '%;background:' + level.color + ';"></div></div>';
+        html += '<div class="jeon-risk-label" style="color:' + level.color + ';">' + level.emoji + ' ' + level.label + ' Risk</div>';
+        html += '<div class="jeon-risk-score">Score: ' + score + ' / ' + model.maxScore + '</div>';
+        html += '<div class="jeon-recommend"><h6>🏃 Exercise Recommendation</h6><p>' + EXERCISE_RECS[level.label] + '</p></div>';
+        html += '<div class="jeon-recommend"><h6>🥗 Diet Recommendation</h6><p>' + DIET_RECS[modelKey] + '</p></div>';
+        html += '<div class="jeon-risk-citation">📚 Source: ' + model.citation + '</div>';
+        html += '<div class="jeon-risk-disclaimer">⚠️ This assessment is a reference tool based on research by Prof. Jeon\'s team and does not replace medical diagnosis.</div>';
+        html += '</div>';
+        return html;
+    }
+
+    // Assessment button click handlers
+    document.querySelectorAll('.jeon-assess-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var modelKey = btn.getAttribute('data-assess');
+            var welcome = document.getElementById('jeon-ai-welcome');
+            if (welcome) welcome.style.display = 'none';
+            var div = document.createElement('div');
+            div.className = 'jeon-msg ai';
+            div.innerHTML = '<div class="jeon-sender">Dr. Jeon AI</div>' + buildAssessmentForm(modelKey);
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            var submitBtn = div.querySelector('.jeon-assess-submit');
+            submitBtn.addEventListener('click', function() {
+                var form = div.querySelector('.jeon-assess-form');
+                var values = {};
+                var valid = true;
+                form.querySelectorAll('[data-field]').forEach(function(el) {
+                    values[el.getAttribute('data-field')] = el.value;
+                    if (el.type === 'number' && (!el.value || isNaN(el.value))) valid = false;
+                });
+                if (!valid) { alert('Please fill in all fields.'); return; }
+                var score = RISK_MODELS[modelKey].calculate(values);
+                var resultDiv = document.createElement('div');
+                resultDiv.className = 'jeon-msg ai';
+                resultDiv.innerHTML = '<div class="jeon-sender">Dr. Jeon AI</div>' + generateResult(modelKey, score);
+                messages.appendChild(resultDiv);
+                messages.scrollTop = messages.scrollHeight;
+            });
+        });
+    });
 
     // External API
     window.jeonAI = {
