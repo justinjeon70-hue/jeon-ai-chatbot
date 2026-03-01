@@ -518,6 +518,49 @@
             height: 14px;
         }
 
+        /* ── 피드백 버튼 ── */
+        .jeon-feedback {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .jeon-feedback-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: #f5f5f7;
+            border: 1px solid #e8e8ed;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+            color: #6e6e73;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        .jeon-feedback-btn:hover {
+            background: #e8e8ed;
+        }
+
+        .jeon-feedback-btn.selected {
+            background: #e8f0fe;
+            border-color: #0071e3;
+            color: #0071e3;
+        }
+
+        /* ── 오프라인 배지 ── */
+        .jeon-offline-badge {
+            display: inline-block;
+            font-size: 9.5px;
+            color: #ff9500;
+            font-weight: 500;
+            margin-left: 6px;
+        }
+
         /* ── 모바일 반응형 ── */
         @media (max-width: 480px) {
             #jeon-ai-chat {
@@ -525,6 +568,7 @@
                 bottom: 0;
                 width: 100%;
                 max-height: 100vh;
+                max-height: 100dvh;
                 border-radius: 0;
             }
             #jeon-ai-toggle {
@@ -748,6 +792,10 @@
     const API_URL = window.JEON_AI_API_URL || '/api/chat';
     const sessionId = 'sess_' + Math.random().toString(36).slice(2, 10);
 
+    // 대화 기록 (서버에 전송 + sessionStorage 저장)
+    const conversationHistory = [];
+    const STORAGE_KEY = 'jeon-ai-chat-ko';
+
     // ═══════════════════════════════════════════
     // 음성 설정
     // ═══════════════════════════════════════════
@@ -816,16 +864,32 @@
         div.className = `jeon-msg ${isUser ? 'user' : 'ai'}`;
         if (!isUser) {
             const content = isHtml ? text : formatText(text);
-            div.innerHTML = `<div class="jeon-sender">전용관 AI</div>${content}`;
-            // TTS 버튼 추가
+            // 콘텐츠를 별도 span으로 감싸서 TTS가 sender 라벨을 읽지 않도록 함
+            const contentSpan = document.createElement('span');
+            contentSpan.className = 'jeon-msg-content';
+            contentSpan.innerHTML = content;
+            div.innerHTML = `<div class="jeon-sender">전용관 AI</div>`;
+            div.appendChild(contentSpan);
+            // TTS 버튼 (콘텐츠만 읽음)
             if (synth) {
                 const ttsBtn = createTtsButton();
                 ttsBtn.addEventListener('click', () => {
-                    const msgText = stripHtmlForTts(div.innerHTML);
+                    const msgText = stripHtmlForTts(contentSpan.innerHTML);
                     speakText(msgText, ttsBtn);
                 });
                 div.appendChild(ttsBtn);
             }
+            // 피드백 버튼
+            const feedback = document.createElement('div');
+            feedback.className = 'jeon-feedback';
+            feedback.innerHTML = `<button class="jeon-feedback-btn" data-vote="up" aria-label="좋아요">&#128077;</button><button class="jeon-feedback-btn" data-vote="down" aria-label="싫어요">&#128078;</button>`;
+            feedback.querySelectorAll('.jeon-feedback-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    feedback.querySelectorAll('.jeon-feedback-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                });
+            });
+            div.appendChild(feedback);
         } else {
             div.textContent = text;
         }
@@ -873,19 +937,30 @@
         if (!text || !text.trim()) return;
         const msg = text.trim();
         addMsg(msg, true);
+        conversationHistory.push({ role: 'user', content: msg });
         input.value = '';
         input.style.height = 'auto';
         sendBtn.disabled = true;
 
         showTyping();
 
+        // 30초 타임아웃
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+
         try {
             const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg, session_id: sessionId })
+                body: JSON.stringify({
+                    message: msg,
+                    session_id: sessionId,
+                    history: conversationHistory.slice(0, -1) // 현재 메시지 제외한 이전 대화
+                }),
+                signal: controller.signal
             });
 
+            clearTimeout(timeout);
             hideTyping();
 
             if (!res.ok) {
@@ -896,16 +971,28 @@
 
             const data = await res.json();
             if (data.text) {
-                addMsg(formatText(data.text), false);
+                addMsg(data.text, false); // addMsg 내부에서 formatText 처리
+                conversationHistory.push({ role: 'assistant', content: data.text });
             } else if (data.error) {
                 throw new Error(data.error);
             }
 
         } catch (err) {
+            clearTimeout(timeout);
             hideTyping();
-            // API 실패 시 데모 응답으로 폴백
-            addMsg(getResponse(msg), false);
+            // API 실패 시 데모 응답으로 폴백 + 오프라인 표시
+            const fallback = getResponse(msg);
+            const msgDiv = addMsg(fallback, false, true);
+            const badge = document.createElement('span');
+            badge.className = 'jeon-offline-badge';
+            badge.textContent = '(오프라인 모드)';
+            const sender = msgDiv.querySelector('.jeon-sender');
+            if (sender) sender.appendChild(badge);
+            conversationHistory.push({ role: 'assistant', content: fallback });
         }
+
+        // sessionStorage에 저장
+        try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory)); } catch(e) {}
 
         sendBtn.disabled = false;
     }
@@ -932,6 +1019,16 @@
     let isListening = false;
     const micBtn = document.getElementById('jeon-ai-mic');
 
+    let silenceTimer = null;
+    const SILENCE_TIMEOUT = 5000; // 5초 무음 시 자동 중지
+
+    function resetSilenceTimer() {
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+            if (isListening && recognition) recognition.stop();
+        }, SILENCE_TIMEOUT);
+    }
+
     if (SpeechRecognition && micBtn) {
         micBtn.style.display = 'flex';
         recognition = new SpeechRecognition();
@@ -943,15 +1040,18 @@
             isListening = true;
             micBtn.classList.add('listening');
             micBtn.setAttribute('aria-label', VOICE_LABELS.micStop);
+            resetSilenceTimer();
         };
 
         recognition.onend = () => {
             isListening = false;
             micBtn.classList.remove('listening');
             micBtn.setAttribute('aria-label', VOICE_LABELS.micStart);
+            if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
         };
 
         recognition.onresult = (e) => {
+            resetSilenceTimer(); // 음성 인식될 때마다 타이머 리셋
             let finalTranscript = '';
             let interimTranscript = '';
             for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -982,6 +1082,22 @@
             }
         });
     }
+
+    // 세션 복원 (새로고침 시 대화 유지)
+    try {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const history = JSON.parse(saved);
+            history.forEach(h => {
+                if (h.role === 'user') {
+                    addMsg(h.content, true);
+                } else {
+                    addMsg(h.content, false, true); // HTML로 전달
+                }
+            });
+            conversationHistory.push(...history);
+        }
+    } catch(e) {}
 
     // 외부 API
     window.jeonAI = {

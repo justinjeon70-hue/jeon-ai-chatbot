@@ -518,6 +518,49 @@
             height: 14px;
         }
 
+        /* ── Feedback Buttons ── */
+        .jeon-feedback {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .jeon-feedback-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            background: #f5f5f7;
+            border: 1px solid #e8e8ed;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+            color: #6e6e73;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        .jeon-feedback-btn:hover {
+            background: #e8e8ed;
+        }
+
+        .jeon-feedback-btn.selected {
+            background: #e8f0fe;
+            border-color: #0071e3;
+            color: #0071e3;
+        }
+
+        /* ── Offline Badge ── */
+        .jeon-offline-badge {
+            display: inline-block;
+            font-size: 9.5px;
+            color: #ff9500;
+            font-weight: 500;
+            margin-left: 6px;
+        }
+
         /* ── Mobile Responsive ── */
         @media (max-width: 480px) {
             #jeon-ai-chat {
@@ -525,6 +568,7 @@
                 bottom: 0;
                 width: 100%;
                 max-height: 100vh;
+                max-height: 100dvh;
                 border-radius: 0;
             }
             #jeon-ai-toggle {
@@ -748,6 +792,10 @@
     const API_URL = window.JEON_AI_API_URL || '/api/chat';
     const sessionId = 'sess_en_' + Math.random().toString(36).slice(2, 10);
 
+    // Conversation history (sent to server + saved to sessionStorage)
+    const conversationHistory = [];
+    const STORAGE_KEY = 'jeon-ai-chat-en';
+
     // ═══════════════════════════════════════════
     // Voice Configuration
     // ═══════════════════════════════════════════
@@ -814,16 +862,32 @@
         div.className = `jeon-msg ${isUser ? 'user' : 'ai'}`;
         if (!isUser) {
             const content = isHtml ? text : formatText(text);
-            div.innerHTML = `<div class="jeon-sender">Dr. Jeon AI</div>${content}`;
-            // TTS button
+            // Wrap content in span so TTS doesn't read sender label
+            const contentSpan = document.createElement('span');
+            contentSpan.className = 'jeon-msg-content';
+            contentSpan.innerHTML = content;
+            div.innerHTML = `<div class="jeon-sender">Dr. Jeon AI</div>`;
+            div.appendChild(contentSpan);
+            // TTS button (reads content only)
             if (synth) {
                 const ttsBtn = createTtsButton();
                 ttsBtn.addEventListener('click', () => {
-                    const msgText = stripHtmlForTts(div.innerHTML);
+                    const msgText = stripHtmlForTts(contentSpan.innerHTML);
                     speakText(msgText, ttsBtn);
                 });
                 div.appendChild(ttsBtn);
             }
+            // Feedback buttons
+            const feedback = document.createElement('div');
+            feedback.className = 'jeon-feedback';
+            feedback.innerHTML = `<button class="jeon-feedback-btn" data-vote="up" aria-label="Helpful">&#128077;</button><button class="jeon-feedback-btn" data-vote="down" aria-label="Not helpful">&#128078;</button>`;
+            feedback.querySelectorAll('.jeon-feedback-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    feedback.querySelectorAll('.jeon-feedback-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                });
+            });
+            div.appendChild(feedback);
         } else {
             div.textContent = text;
         }
@@ -869,19 +933,31 @@
         if (!text || !text.trim()) return;
         const msg = text.trim();
         addMsg(msg, true);
+        conversationHistory.push({ role: 'user', content: msg });
         input.value = '';
         input.style.height = 'auto';
         sendBtn.disabled = true;
 
         showTyping();
 
+        // 30s timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+
         try {
             const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg, session_id: sessionId, lang: 'en' })
+                body: JSON.stringify({
+                    message: msg,
+                    session_id: sessionId,
+                    lang: 'en',
+                    history: conversationHistory.slice(0, -1)
+                }),
+                signal: controller.signal
             });
 
+            clearTimeout(timeout);
             hideTyping();
 
             if (!res.ok) {
@@ -892,15 +968,28 @@
 
             const data = await res.json();
             if (data.text) {
-                addMsg(formatText(data.text), false);
+                addMsg(data.text, false); // addMsg handles formatText internally
+                conversationHistory.push({ role: 'assistant', content: data.text });
             } else if (data.error) {
                 throw new Error(data.error);
             }
 
         } catch (err) {
+            clearTimeout(timeout);
             hideTyping();
-            addMsg(getResponse(msg), false);
+            // Fallback to demo response + offline indicator
+            const fallback = getResponse(msg);
+            const msgDiv = addMsg(fallback, false, true);
+            const badge = document.createElement('span');
+            badge.className = 'jeon-offline-badge';
+            badge.textContent = '(offline mode)';
+            const sender = msgDiv.querySelector('.jeon-sender');
+            if (sender) sender.appendChild(badge);
+            conversationHistory.push({ role: 'assistant', content: fallback });
         }
+
+        // Save to sessionStorage
+        try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(conversationHistory)); } catch(e) {}
 
         sendBtn.disabled = false;
     }
@@ -927,6 +1016,16 @@
     let isListening = false;
     const micBtn = document.getElementById('jeon-ai-mic');
 
+    let silenceTimer = null;
+    const SILENCE_TIMEOUT = 5000; // 5s auto-stop on silence
+
+    function resetSilenceTimer() {
+        if (silenceTimer) clearTimeout(silenceTimer);
+        silenceTimer = setTimeout(() => {
+            if (isListening && recognition) recognition.stop();
+        }, SILENCE_TIMEOUT);
+    }
+
     if (SpeechRecognition && micBtn) {
         micBtn.style.display = 'flex';
         recognition = new SpeechRecognition();
@@ -938,15 +1037,18 @@
             isListening = true;
             micBtn.classList.add('listening');
             micBtn.setAttribute('aria-label', VOICE_LABELS.micStop);
+            resetSilenceTimer();
         };
 
         recognition.onend = () => {
             isListening = false;
             micBtn.classList.remove('listening');
             micBtn.setAttribute('aria-label', VOICE_LABELS.micStart);
+            if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
         };
 
         recognition.onresult = (e) => {
+            resetSilenceTimer(); // Reset timer on each speech result
             let finalTranscript = '';
             let interimTranscript = '';
             for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -976,6 +1078,22 @@
             }
         });
     }
+
+    // Restore session (keep conversation across page refresh)
+    try {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const history = JSON.parse(saved);
+            history.forEach(h => {
+                if (h.role === 'user') {
+                    addMsg(h.content, true);
+                } else {
+                    addMsg(h.content, false, true);
+                }
+            });
+            conversationHistory.push(...history);
+        }
+    } catch(e) {}
 
     // External API
     window.jeonAI = {
