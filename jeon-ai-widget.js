@@ -450,9 +450,9 @@
         #jeon-ai-mic {
             width: 38px;
             height: 38px;
-            background: #f5f5f7;
-            color: #6e6e73;
-            border: 1.5px solid #e8e8ed;
+            background: #e8f0fe;
+            color: #0071e3;
+            border: 1.5px solid #bfd4f5;
             border-radius: 10px;
             cursor: pointer;
             display: flex;
@@ -463,8 +463,8 @@
         }
 
         #jeon-ai-mic:hover {
-            background: #e8e8ed;
-            color: #1d1d1f;
+            background: #d0e2fc;
+            color: #0055b3;
             transform: scale(1.05);
         }
 
@@ -492,19 +492,19 @@
             justify-content: center;
             width: 26px;
             height: 26px;
-            background: #f0f0f5;
-            border: 1px solid #e0e0e5;
+            background: #e8f0fe;
+            border: 1px solid #bfd4f5;
             border-radius: 6px;
             cursor: pointer;
             margin-top: 8px;
             transition: background 0.2s, color 0.2s;
-            color: #6e6e73;
+            color: #0071e3;
             flex-shrink: 0;
         }
 
         .jeon-tts-btn:hover {
-            background: #e0e0e5;
-            color: #1d1d1f;
+            background: #d0e2fc;
+            color: #0055b3;
         }
 
         .jeon-tts-btn.speaking {
