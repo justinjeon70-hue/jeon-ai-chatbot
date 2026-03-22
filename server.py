@@ -50,11 +50,11 @@ def tokenize_korean(text):
     return words
 
 def build_idf(chunks):
-    """IDF (Inverse Document Frequency) 계산"""
+    """IDF (Inverse Document Frequency) 계산 — text + source 포함"""
     doc_count = len(chunks)
     df = Counter()
     for chunk in chunks:
-        words = set(tokenize_korean(chunk["text"]))
+        words = set(tokenize_korean(chunk["text"] + " " + chunk.get("source", "")))
         for word in words:
             df[word] += 1
     idf = {}
@@ -62,15 +62,17 @@ def build_idf(chunks):
         idf[word] = math.log((doc_count + 1) / (freq + 1)) + 1
     return idf
 
-def search_chunks(query, chunks, idf, top_k=5):
-    """BM25 스타일 검색으로 관련 청크 찾기"""
+def search_chunks(query, chunks, idf, top_k=8):
+    """BM25 스타일 검색으로 관련 청크 찾기 — source 필드도 검색"""
     query_words = tokenize_korean(query)
     if not query_words:
         return []
 
     scores = []
     for chunk in chunks:
-        chunk_words = tokenize_korean(chunk["text"])
+        # text + source 합쳐서 검색
+        combined = chunk["text"] + " " + chunk.get("source", "")
+        chunk_words = tokenize_korean(combined)
         if not chunk_words:
             scores.append(0)
             continue
@@ -80,7 +82,7 @@ def search_chunks(query, chunks, idf, top_k=5):
         score = 0
         k1 = 1.5
         b = 0.75
-        avg_dl = 450  # 평균 청크 길이 (대략)
+        avg_dl = 450
 
         for qw in query_words:
             if qw in word_freq:
@@ -91,12 +93,20 @@ def search_chunks(query, chunks, idf, top_k=5):
 
         scores.append(score)
 
-    # 상위 top_k 인덱스
     ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
     results = []
-    for i in ranked[:top_k]:
+    source_count = {}
+    for i in ranked[:top_k * 4]:
         if scores[i] > 0:
+            src = chunks[i].get("source", "")
+            # 같은 논문에서 최대 2개 청크만 (다양한 논문 포함)
+            sc = source_count.get(src, 0)
+            if sc >= 2:
+                continue
+            source_count[src] = sc + 1
             results.append(chunks[i])
+            if len(results) >= top_k:
+                break
     return results
 
 # 서버 시작 시 지식베이스 로드
@@ -108,9 +118,11 @@ IDF_INDEX = build_idf(KNOWLEDGE_BASE) if KNOWLEDGE_BASE else {}
 # ═══════════════════════════════════════════
 SYSTEM_PROMPT = """너는 "전용관 AI"이다. 연세대학교 전용관 교수의 30년간의 연구, 임상 경험, 철학을 바탕으로 만들어진 근거 기반 운동건강 AI 어드바이저이다.
 
-전용관 교수는 연세대학교 스포츠응용산업학과 교수이자, 하버드 의과대학(Joslin Diabetes Center, Dana Farber Cancer Institute), 캠브리지 대학교에서 연구한 운동의학 및 운동종양학 전문가이다. Nature Medicine, JAMA Surgery, Annals of Oncology 등 300여 편의 국제 학술 논문을 발표했으며, 연세 운동의학 및 살루토제네시스 센터(ICONS)를 이끌고 있다. 저서로 『옥시토신 이야기』가 있다.
+전용관 교수는 연세대학교 스포츠응용산업학과 교수이자, 하버드 의과대학(Joslin Diabetes Center, Dana Farber Cancer Institute), 캠브리지 대학교에서 연구한 운동의학 및 운동종양학 전문가이다. Nature Medicine, JAMA Surgery, Annals of Oncology 등 543편의 학술 논문을 발표했으며(Google Scholar 피인용 12,969회, h-index 57), 연세 운동의학 및 살루토제네시스 센터(ICONS)를 이끌고 있다. 저서로 『옥시토신 이야기』가 있다.
 
-너는 전용관 교수의 철학적 관점을 토대로, 운동의학과 건강과학 분야의 폭넓은 과학적 근거를 종합하여 전달하는 역할을 한다. 특정인의 연구만을 반복 인용하지 않으며, 해당 분야의 대표적인 연구, 가이드라인, 메타분석 등을 균형 있게 활용한다.
+전용관 교수의 주요 연구 분야는 15개 건강 영역에 걸쳐 있다: 운동종양학(111편), 당뇨/대사질환(57편), 비만/체성분(35편), 신체활동 역학(34편), 심혈관(12편), 정신건강(6편), 운동과학(6편), 재활(5편), 웨어러블 기술(4편), 아동청소년(3편), 노인건강(3편), 특수체육(3편), 바이오마커(2편), 영양(1편).
+
+너는 전용관 교수의 철학적 관점을 토대로, 운동의학과 건강과학 분야의 폭넓은 과학적 근거를 종합하여 전달하는 역할을 한다. 참고자료(Reference Material)에 전용관 교수의 실제 논문 내용이 포함되어 있을 경우, 해당 논문의 구체적 결과(수치, 저널명 등)를 적극 인용하라. 특정인의 연구만을 반복 인용하지 않으며, 해당 분야의 대표적인 연구, 가이드라인, 메타분석 등을 균형 있게 활용한다.
 
 ## 핵심 철학
 
@@ -295,18 +307,20 @@ def chat():
         # RAG: 사용자 질문으로 관련 지식 검색
         rag_context = ""
         if KNOWLEDGE_BASE:
-            relevant_chunks = search_chunks(user_message, KNOWLEDGE_BASE, IDF_INDEX, top_k=5)
+            relevant_chunks = search_chunks(user_message, KNOWLEDGE_BASE, IDF_INDEX, top_k=8)
             if relevant_chunks:
                 if lang == "en":
-                    rag_context = "\n\n## Reference Material (from Prof. Jeon's YouTube lectures and publications)\n"
+                    rag_context = "\n\n## Reference Material (from Prof. Jeon's research publications and lectures)\n"
                     for i, chunk in enumerate(relevant_chunks, 1):
-                        rag_context += f"\n### Reference {i} ({chunk['source']})\n{chunk['text']}\n"
-                    rag_context += "\nUse these references naturally in your answer. You do not need to cite the source directly. Always respond in English.\n"
+                        source = chunk['source']
+                        rag_context += f"\n### Reference {i}\n**Source:** {source}\n{chunk['text']}\n"
+                    rag_context += "\nUse these references in your answer. When citing a publication, mention the paper title, journal name, and key findings with specific numbers. Always respond in English.\n"
                 else:
-                    rag_context = "\n\n## 참고 자료 (전용관 교수의 YouTube 강의 및 저서에서 발췌)\n"
+                    rag_context = "\n\n## 참고 자료 (전용관 교수의 학술 논문 및 강의에서 발췌)\n"
                     for i, chunk in enumerate(relevant_chunks, 1):
-                        rag_context += f"\n### 참고 {i} ({chunk['source']})\n{chunk['text']}\n"
-                    rag_context += "\n위 참고 자료를 활용하되, 자연스럽게 답변에 녹여서 전달하세요. 출처를 직접 언급하지 않아도 됩니다.\n"
+                        source = chunk['source']
+                        rag_context += f"\n### 참고 {i}\n**출처:** {source}\n{chunk['text']}\n"
+                    rag_context += "\n위 참고 자료를 활용하여 답변하세요. 논문을 인용할 때는 논문 제목, 게재 저널명, 구체적 연구 결과(수치 포함)를 명시하세요. 출처 논문명을 적극 언급하세요.\n"
 
         base_prompt = SYSTEM_PROMPT_EN if lang == "en" else SYSTEM_PROMPT
         system_with_rag = base_prompt + rag_context
