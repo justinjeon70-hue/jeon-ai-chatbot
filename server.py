@@ -25,7 +25,7 @@ load_dotenv()
 # ═══════════════════════════════════════════
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip().replace("\n", "").replace(" ", "")
 MODEL = "claude-sonnet-4-20250514"
-MAX_TOKENS = 1024
+MAX_TOKENS = 2048
 
 app = Flask(__name__, static_folder=".", static_url_path="")
 CORS(app, origins=["https://drjustinjeon.com", "https://www.drjustinjeon.com", "http://localhost:5000"])
@@ -63,14 +63,15 @@ def build_idf(chunks):
     return idf
 
 def search_chunks(query, chunks, idf, top_k=8):
-    """BM25 스타일 검색으로 관련 청크 찾기 — source 필드도 검색"""
+    """BM25 스타일 검색 + 핵심논문 부스팅 + 강제 포함"""
     query_words = tokenize_korean(query)
     if not query_words:
         return []
 
     scores = []
-    for chunk in chunks:
-        # text + source 합쳐서 검색
+    core_paper_indices = []  # 핵심논문 인덱스 추적
+
+    for idx, chunk in enumerate(chunks):
         combined = chunk["text"] + " " + chunk.get("source", "")
         chunk_words = tokenize_korean(combined)
         if not chunk_words:
@@ -91,20 +92,42 @@ def search_chunks(query, chunks, idf, top_k=8):
                 tf_norm = (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * doc_len / avg_dl))
                 score += idf_val * tf_norm
 
+        # 핵심논문 부스트: 2배 가중치
+        src = chunk.get("source", "")
+        if src.startswith("핵심논문:"):
+            score *= 2.0
+            if score > 0:
+                core_paper_indices.append((idx, score))
+
         scores.append(score)
 
     ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+
+    # Step 1: 핵심논문 먼저 강제 포함 (score > 0인 것들)
     results = []
+    used_indices = set()
     source_count = {}
+
+    # 핵심논문 우선 삽입 (최대 3개)
+    core_sorted = sorted(core_paper_indices, key=lambda x: x[1], reverse=True)
+    for idx, sc in core_sorted[:3]:
+        src = chunks[idx].get("source", "")
+        results.append(chunks[idx])
+        used_indices.add(idx)
+        source_count[src] = source_count.get(src, 0) + 1
+
+    # Step 2: 나머지 일반 결과 채우기
     for i in ranked[:top_k * 4]:
+        if i in used_indices:
+            continue
         if scores[i] > 0:
             src = chunks[i].get("source", "")
-            # 같은 논문에서 최대 2개 청크만 (다양한 논문 포함)
             sc = source_count.get(src, 0)
             if sc >= 2:
                 continue
             source_count[src] = sc + 1
             results.append(chunks[i])
+            used_indices.add(i)
             if len(results) >= top_k:
                 break
     return results
@@ -317,13 +340,13 @@ def chat():
                     for i, chunk in enumerate(relevant_chunks, 1):
                         source = chunk['source']
                         rag_context += f"\n### Reference {i}\n**Source:** {source}\n{chunk['text']}\n"
-                    rag_context += "\nUse these references in your answer. When citing a publication, mention the paper title, journal name, and key findings with specific numbers. Always respond in English.\n"
+                    rag_context += "\n\n## MANDATORY citation rules:\n1. If any reference above is labeled '핵심논문' or 'Publication', cite it as: 'Professor Jeon's research (Journal, Year)'.\n2. Include specific numbers (%, n, fold-change, etc.) from the paper.\n3. You MUST mention 'Professor Jeon' or 'Prof. Jeon' at least once. Do NOT say 'our team' — use 'Professor Jeon's team'.\n4. Cite Professor Jeon's papers FIRST, before other references.\n5. Always respond in English.\n"
                 else:
                     rag_context = "\n\n## 참고 자료 (전용관 교수의 학술 논문 및 강의에서 발췌)\n"
                     for i, chunk in enumerate(relevant_chunks, 1):
                         source = chunk['source']
                         rag_context += f"\n### 참고 {i}\n**출처:** {source}\n{chunk['text']}\n"
-                    rag_context += "\n위 참고 자료를 활용하여 답변하세요. 논문을 인용할 때는 논문 제목, 게재 저널명, 구체적 연구 결과(수치 포함)를 명시하세요. 출처 논문명을 적극 언급하세요.\n"
+                    rag_context += "\n\n## 답변 시 반드시 지킬 규칙:\n1. 위 참고 자료 중 '핵심논문' 또는 'Publication'이 있으면, 반드시 '전용관 교수팀의 연구(저널명, 연도)'로 인용하라.\n2. 논문의 구체적 수치(%, n수, 배수 등)를 포함하라.\n3. '전용관 교수' 이름을 반드시 1회 이상 언급하라. '저희 연구팀'이 아닌 '전용관 교수팀'으로 표기.\n4. 참고 자료에 전용관 교수의 논문이 포함되어 있으면, 그 논문을 가장 먼저 인용하라.\n"
 
         base_prompt = SYSTEM_PROMPT_EN if lang == "en" else SYSTEM_PROMPT
         system_with_rag = base_prompt + rag_context
