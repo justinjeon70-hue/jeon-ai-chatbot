@@ -30,7 +30,7 @@ drjustinjeon.com에 `<script>` 한 줄로 삽입하는 방식.
 - 한국어/영어 위젯은 구조가 동일하므로 기능 추가 시 양쪽 모두 수정
 - CSS 클래스 접두어: `jeon-` (위젯), `jeon-assess-` / `jeon-risk-` (평가 기능)
 - API 엔드포인트: `POST /api/chat` (message, session_id, history, lang)
-- Claude 모델: `claude-sonnet-4-20250514`
+- Claude 모델: `claude-sonnet-4-6`
 
 ## Running Locally
 ```bash

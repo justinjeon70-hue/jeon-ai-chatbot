@@ -24,7 +24,7 @@ load_dotenv()
 # 설정
 # ═══════════════════════════════════════════
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip().replace("\n", "").replace(" ", "")
-MODEL = "claude-sonnet-4-20250514"
+MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 2048
 
 app = Flask(__name__, static_folder=".", static_url_path="")
